@@ -1,11 +1,11 @@
 import React from 'react';
-import contactBackground from '../assets/contactbg.png' // Replace with your actual background image path
+import contactBackground from '../assets/contactbg.png'; // Replace with your actual background image path
 import facebookIcon from '../assets/facebook.jpg'; // Replace with your actual icon path
 import instagramIcon from '../assets/instagram.jpg'; // Replace with your actual icon path
 
 const ContactSection = () => {
   const sectionStyle = {
-    backgroundImage: `url(${contactBackground})`, // Background image for the contact section
+    backgroundImage: `url(${contactBackground})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
@@ -24,13 +24,13 @@ const ContactSection = () => {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Dark transparent background
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     padding: '30px',
     borderRadius: '8px',
     maxWidth: '900px',
     width: '100%',
     textAlign: 'center',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)', // Soft shadow for depth
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
   };
 
   const contactDetailsStyle = {
@@ -80,19 +80,23 @@ const ContactSection = () => {
           <div style={iconContainerStyle}>
             <div>
               <img
-                src={facebookIcon} // Replace with your Facebook icon path
+                src={facebookIcon}
                 alt="Facebook"
                 style={iconStyle}
-                onClick={() => window.open('https://www.facebook.com', '_blank')}
+                onClick={() =>
+                  window.open('https://www.facebook.com/MAKYS2020', '_blank')
+                }
               />
               <span style={detailStyle}>MA.KY'S</span>
             </div>
             <div>
               <img
-                src={instagramIcon} // Replace with your Instagram icon path
+                src={instagramIcon}
                 alt="Instagram"
                 style={iconStyle}
-                onClick={() => window.open('https://www.instagram.com', '_blank')}
+                onClick={() =>
+                  window.open('https://www.instagram.com/_ma.kys/', '_blank')
+                }
               />
               <span style={detailStyle}>MA.KY'S</span>
             </div>

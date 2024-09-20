@@ -16,23 +16,44 @@ const Home = () => {
   };
 
   const homeStyle = {
-    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${backgroundImage})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
+    position: 'relative',
     height: '100vh',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'flex-start',
-    position: 'relative',
     paddingLeft: '50px',
     color: '#fff',
+    fontFamily: "'Lobster', sans-serif",
+  };
+
+  const backgroundStyle = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundImage: `url(${backgroundImage})`,
+    backgroundSize: 'cover',
+    backgroundPosition: 'center',
+    opacity: 0.70, // Set background opacity to %
+    zIndex: -1,
+  };
+
+  const overlayStyle = {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Darker overlay for better text visibility
+    zIndex: -1,
   };
 
   const contentStyle = {
     maxWidth: '600px',
-    padding: '10px',
+    padding: '20px',
     borderRadius: '8px',
+    zIndex: 1,
   };
 
   const headingStyle = {
@@ -64,6 +85,8 @@ const Home = () => {
 
   return (
     <div style={homeStyle}>
+      <div style={backgroundStyle} />
+      <div style={overlayStyle} />
       <div style={contentStyle}>
         <h1 style={headingStyle}>Welcome to MA.KY's!</h1>
         <h2 style={subHeadingStyle}>Discover Amazing Coffee House & Get Energy</h2>

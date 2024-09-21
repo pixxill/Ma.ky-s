@@ -2,93 +2,101 @@
 
 /* General Header Styles */
 .header {
-    background-color: rgba(255, 255, 255, 0); /* Fully transparent background */
-    padding: 10px 0; /* Padding for the header */
-    color: #000; /* Black text color */
-    box-shadow: none; /* Remove shadow for fully transparent effect */
-    position: fixed; /* Fix header to the top */
-    width: 100%; /* Full width */
-    top: 0; /* Align at the top */
-    z-index: 1000; /* Make sure the header is on top */
-  }
-  
-  .container {
-    max-width: 1200px; /* Maximum width of the container */
-    margin: 0 auto; /* Center align the container */
-    padding: 0 20px; /* Padding inside the container */
-    display: flex; /* Flexbox layout */
-    justify-content: space-between; /* Space between logo and navigation */
-    align-items: center; /* Center items vertically */
-  }
-  
-  /* Logo Styles */
-  .header__logo {
-    flex-shrink: 0; /* Prevent logo from shrinking */
-  }
-  
-  .header__logo-link {
-    display: flex; /* Display as flex to align the logo vertically */
-    align-items: center; /* Center the logo vertically */
-  }
-  
-  .header__logo-img {
-    height: 100px; /* Adjust this value to change the logo height */
-    width: auto; /* Maintain aspect ratio */
-    max-width: 100%; /* Ensure logo does not overflow its container */
-    transition: transform 0.3s ease; /* Smooth transition for hover effect */
-  }
-  
-  /* Hover effect on the logo */
-  .header__logo-img:hover {
-    transform: scale(1.1); /* Slightly increase the size on hover */
-  }
-  
-  /* Navigation Styles */
-  .header__nav {
-    display: flex; /* Display nav items in a row */
-  }
-  
-  .header__nav-list {
-    list-style: none; /* Remove default list styling */
-    display: flex; /* Display list items in a row */
-    margin: 0; /* Remove default margin */
-    padding: 0; /* Remove default padding */
-  }
-  
-  .header__nav-item {
-    margin-left: 20px; /* Spacing between nav items */
-  }
-  
-  .header__nav-link {
-    text-decoration: none; /* Remove underline */
-    color: #F5F7F8; /* Black text color */
-    font-size: 18px; /* Font size for nav links */
-    font-weight: 600; /* Bold text */
-    transition: color 0.3s ease, transform 0.3s ease; /* Smooth transition for color change and scale */
-    position: relative; /* Position relative for the hover effect */
-  }
-  
-  /* Hover effect for nav links */
-  .header__nav-link::before {
-    content: '';
-    position: absolute;
-    width: 100%;
-    height: 2px;
-    bottom: -4px;
-    left: 0;
-    background-color: #838383; /* Underline color on hover */
-    visibility: hidden;
-    transform: scaleX(0);
-    transition: all 0.3s ease-in-out;
-  }
-  
-  .header__nav-link:hover::before {
-    visibility: visible;
-    transform: scaleX(1);
-  }
-  
-  .header__nav-link:hover {
-    color: #838383; /* Change color on hover */
-    transform: translateY(-2px); /* Slightly lift the link */
-  }
-  
+  background-color: rgba(255, 255, 255, 0); /* Fully transparent background */
+  padding: 10px 0; /* Padding for the header */
+  color: #000; /* Black text color */
+  box-shadow: none; /* Remove shadow for fully transparent effect */
+  position: fixed; /* Fix header to the top */
+  width: 100%; /* Full width */
+  top: 0; /* Align at the top */
+  z-index: 1000; /* Make sure the header is on top */
+  font-family: 'Lobster', sans-serif; /* Apply the Lobster font */
+}
+
+.container {
+  max-width: 1200px; /* Maximum width of the container */
+  margin: 0 auto; /* Center align the container */
+  padding: 0 20px; /* Padding inside the container */
+  display: flex; /* Flexbox layout */
+  justify-content: space-between; /* Space between logo and navigation */
+  align-items: center; /* Center items vertically */
+}
+
+/* Logo Styles */
+.header__logo {
+  flex-shrink: 0; /* Prevent logo from shrinking */
+}
+
+.header__logo-link {
+  display: flex; /* Display as flex to align the logo vertically */
+  align-items: center; /* Center the logo vertically */
+  font-family: 'Lobster', sans-serif; /* Apply the Lobster font to the logo link */
+  cursor: pointer; /* Change cursor to pointer on hover */
+}
+
+.header__logo-img {
+  height: 100px; /* Adjust this value to change the logo height */
+  width: 100px; /* Make the logo width equal to height for a circular shape */
+  max-width: 100%; /* Ensure logo does not overflow its container */
+  transition: transform 0.3s ease; /* Smooth transition for hover effect */
+  border-radius: 50%; /* Make the image circular */
+  object-fit: cover; /* Ensure the image covers the entire area and maintains its aspect ratio */
+  overflow: hidden; /* Hide overflow to maintain circular shape */
+  cursor: pointer; /* Change cursor to pointer on hover */
+}
+
+/* Hover effect on the logo */
+.header__logo-img:hover {
+  transform: scale(1.1); /* Slightly increase the size on hover */
+}
+
+/* Navigation Styles */
+.header__nav {
+  display: flex; /* Display nav items in a row */
+}
+
+.header__nav-list {
+  list-style: none; /* Remove default list styling */
+  display: flex; /* Display list items in a row */
+  margin: 0; /* Remove default margin */
+  padding: 0; /* Remove default padding */
+}
+
+.header__nav-item {
+  margin-left: 20px; /* Spacing between nav items */
+}
+
+.header__nav-link {
+  text-decoration: none; /* Remove underline */
+  color: #F5F7F8; /* White text color */
+  font-size: 18px; /* Font size for nav links */
+  font-weight: 600; /* Bold text */
+  font-family: 'Lobster', sans-serif; /* Apply the Lobster font to nav links */
+  transition: color 0.3s ease, transform 0.3s ease; /* Smooth transition for color change and scale */
+  position: relative; /* Position relative for the hover effect */
+  cursor: pointer; /* Change cursor to pointer on hover */
+}
+
+/* Hover effect for nav links */
+.header__nav-link::before {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 2px;
+  bottom: -4px;
+  left: 0;
+  background-color: #838383; /* Underline color on hover */
+  visibility: hidden;
+  transform: scaleX(0);
+  transition: all 0.3s ease-in-out;
+}
+
+.header__nav-link:hover::before {
+  visibility: visible;
+  transform: scaleX(1);
+}
+
+.header__nav-link:hover {
+  color: #838383; /* Change color on hover */
+  transform: translateY(-2px); /* Slightly lift the link */
+}

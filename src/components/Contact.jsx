@@ -24,13 +24,14 @@ const ContactSection = () => {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    padding: '30px',
-    borderRadius: '8px',
-    maxWidth: '900px',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    padding: '40px',
+    borderRadius: '16px',
+    maxWidth: '800px',
     width: '100%',
     textAlign: 'center',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+    boxShadow: '0 10px 20px rgba(0, 0, 0, 0.3)',
+    backdropFilter: 'blur(8px)', // Adds a blur effect for a more elegant look
   };
 
   const contactDetailsStyle = {
@@ -44,27 +45,50 @@ const ContactSection = () => {
   };
 
   const headingStyle = {
-    fontSize: '32px',
+    fontSize: '28px',
     fontWeight: 'bold',
     marginBottom: '20px',
+    borderBottom: '2px solid #a8774e', // Elegant underline effect
+    display: 'inline-block',
+    paddingBottom: '5px',
   };
 
   const detailStyle = {
     fontSize: '18px',
-    marginBottom: '10px',
+    marginBottom: '15px',
+    color: '#d1d1d1', // Lighter color for details
   };
 
   const iconContainerStyle = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
+    gap: '20px',
+  };
+
+  const iconWrapperStyle = {
+    display: 'flex',
+    alignItems: 'center',
+    cursor: 'pointer',
+    transition: 'transform 0.3s ease', // Smooth scaling effect on hover
+    '&:hover': {
+      transform: 'scale(1.1)',
+    },
   };
 
   const iconStyle = {
-    width: '30px',
-    height: '30px',
-    marginBottom: '10px',
-    cursor: 'pointer',
+    width: '40px', // Increased size for better visibility
+    height: '40px',
+    marginRight: '10px',
+    borderRadius: '50%',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+    transition: 'transform 0.3s ease', // Smooth scaling effect on hover
+  };
+
+  const socialMediaNameStyle = {
+    fontSize: '20px',
+    fontWeight: 'bold',
+    color: '#fff',
   };
 
   return (
@@ -78,27 +102,13 @@ const ContactSection = () => {
         <div style={socialMediaStyle}>
           <h2 style={headingStyle}>SOCIAL MEDIA</h2>
           <div style={iconContainerStyle}>
-            <div>
-              <img
-                src={facebookIcon}
-                alt="Facebook"
-                style={iconStyle}
-                onClick={() =>
-                  window.open('https://www.facebook.com/MAKYS2020', '_blank')
-                }
-              />
-              <span style={detailStyle}>MA.KY'S</span>
+            <div style={iconWrapperStyle} onClick={() => window.open('https://www.facebook.com/MAKYS2020', '_blank')}>
+              <img src={facebookIcon} alt="Facebook" style={iconStyle} />
+              <span style={socialMediaNameStyle}>MA.KY'S</span>
             </div>
-            <div>
-              <img
-                src={instagramIcon}
-                alt="Instagram"
-                style={iconStyle}
-                onClick={() =>
-                  window.open('https://www.instagram.com/_ma.kys/', '_blank')
-                }
-              />
-              <span style={detailStyle}>MA.KY'S</span>
+            <div style={iconWrapperStyle} onClick={() => window.open('https://www.instagram.com/_ma.kys/', '_blank')}>
+              <img src={instagramIcon} alt="Instagram" style={iconStyle} />
+              <span style={socialMediaNameStyle}>MA.KY'S</span>
             </div>
           </div>
         </div>

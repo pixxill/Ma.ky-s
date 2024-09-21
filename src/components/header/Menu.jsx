@@ -1,60 +1,102 @@
-import React from 'react';
-import Slider from 'react-slick'; // Import the Slider component
-import 'slick-carousel/slick/slick.css'; // Import slick carousel CSS
-import 'slick-carousel/slick/slick-theme.css'; // Import slick carousel theme CSS
-import backgroundImage from '../../assets/menu.jpg'; // Replace with your actual image path
-import spanishLatte from '../../assets/spanishLatte.png'; // Placeholder image for Spanish Latte
-import matchaSubreve from '../../assets/matchsubreve.png'; // Placeholder image for Matcha Subreve
+import React, { useState } from 'react';
+import Slider from 'react-slick';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
+import spanishLatte from '../../assets/spanishLatte.png';
+import matchaSubreve from '../../assets/matchsubreve.png';
 import icebiscoff from '../../assets/icebiscoff.png';
+import breakfastImage from '../../assets/breakfast.jpg';
+import cookiesImage from '../../assets/cookies.jpg';
 
 const MenuSection = () => {
+  const [hoveredIndex, setHoveredIndex] = useState({ section: null, index: null });
+
   const sectionStyle = {
-    backgroundImage: `url(${backgroundImage})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
-    height: '100vh',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    color: '#fff',
-    padding: '20px',
-  };
-
-  const menuItemStyle = {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    padding: '20px',
-    borderRadius: '8px',
-    maxWidth: '300px', // Increased max width for larger images
+    padding: '30px 15px',
+    color: '#000',
+    fontFamily: "'Poppins', sans-serif",
     textAlign: 'center',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
-    margin: '0 10px', // Margin for each card
   };
 
-  const imageStyle = {
-    width: '250px', // Increased width
-    height: '250px', // Increased height
-    borderRadius: '50%',
-    marginBottom: '10px',
-  };
-
-  const priceStyle = {
-    fontSize: '24px',
+  const mainHeadingStyle = {
+    fontSize: '32px',
     fontWeight: 'bold',
-    marginTop: '10px',
+    marginBottom: '20px',
+    color: '#333',
   };
+
+  const headingStyle = {
+    fontSize: '28px',
+    fontWeight: 'bold',
+    marginBottom: '30px',
+    color: '#333',
+  };
+
+  const menuSectionStyle = {
+    marginBottom: '40px',
+  };
+
+  const sliderContainerStyle = {
+    width: '80%',
+    margin: '0 auto',
+  };
+
+  // Define the styles dynamically based on hover state
+  const menuItemStyle = (section, index) => ({
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    padding: '15px',
+    borderRadius: '12px',
+    margin: '0 8px',
+    boxShadow:
+      hoveredIndex.section === section && hoveredIndex.index === index
+        ? '0 10px 20px rgba(0, 0, 0, 0.15)'
+        : '0 6px 12px rgba(0, 0, 0, 0.08)',
+    textAlign: 'center',
+    minWidth: '200px',
+    border: '1px solid #ddd',
+    transform:
+      hoveredIndex.section === section && hoveredIndex.index === index ? 'scale(1.04)' : 'scale(1)',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+    cursor: 'pointer',
+  });
+
+  const imageStyle = (section, index) => ({
+    width: '60%',
+    height: '180px',
+    borderRadius: '10px',
+    marginBottom: '10px',
+    objectFit: 'cover',
+    boxShadow: '0 3px 6px rgba(0, 0, 0, 0.08)',
+    transform:
+      hoveredIndex.section === section && hoveredIndex.index === index ? 'scale(1.08)' : 'scale(1)',
+    transition: 'transform 0.3s ease',
+  });
 
   const titleStyle = {
     fontSize: '18px',
     fontWeight: 'bold',
-    marginBottom: '10px',
+    marginBottom: '6px',
+    color: '#333',
   };
 
-  // Settings for the slider
+  const descriptionStyle = {
+    fontSize: '14px',
+    marginBottom: '6px',
+    color: '#777',
+  };
+
+  const priceStyle = {
+    fontSize: '16px',
+    fontWeight: 'bold',
+    color: '#333',
+  };
+
   const settings = {
     dots: true,
     infinite: true,
@@ -70,7 +112,7 @@ const MenuSection = () => {
         },
       },
       {
-        breakpoint: 600,
+        breakpoint: 768,
         settings: {
           slidesToShow: 1,
           slidesToScroll: 1,
@@ -79,37 +121,93 @@ const MenuSection = () => {
     ],
   };
 
+  const menuItems = {
+    coffee: [
+      { img: spanishLatte, title: 'Spanish Latte', description: 'Milk with vanilla flavored', price: 'P120' },
+      { img: matchaSubreve, title: 'Matcha Subreve', description: 'Milk with vanilla flavored', price: 'P120' },
+      { img: icebiscoff, title: 'Ice Biscoff', description: 'Milk with vanilla flavored', price: 'P120' },
+    ],
+    breakfast: [
+      { img: breakfastImage, title: 'Pancakes', description: 'With syrup and butter', price: 'P80' },
+      { img: breakfastImage, title: 'Omelette', description: 'Cheese and vegetables', price: 'P100' },
+    ],
+    cookies: [
+      { img: cookiesImage, title: 'Chocolate Chip', description: 'Milk with vanilla flavored', price: 'P50' },
+      { img: cookiesImage, title: 'Oatmeal Raisin', description: 'Oatmeal and raisin flavor', price: 'P50' },
+    ],
+  };
+
   return (
-    <section style={sectionStyle}>
-      <h1 style={{ fontSize: '36px', fontWeight: 'bold', marginBottom: '20px' }}>MENU</h1>
-      
-      <h3 style={{ fontSize: '24px', marginBottom: '20px' }}>Coffee</h3>
+    <div style={sectionStyle}>
+      {/* Main Heading */}
+      <h1 style={mainHeadingStyle}>Explore Our Menu</h1>
 
-      <Slider {...settings} style={{ width: '80%' }}>
-        {/* Menu Item 1 */}
-        <div style={menuItemStyle}>
-          <img src={spanishLatte} alt="Spanish Latte" style={imageStyle} />
-          <h4 style={titleStyle}>Spanish Latte</h4>
-          <div style={priceStyle}>P120</div>
+      {/* Coffee Section */}
+      <div style={menuSectionStyle}>
+        <h2 style={headingStyle}>Coffee</h2>
+        <div style={sliderContainerStyle}>
+          <Slider {...settings}>
+            {menuItems.coffee.map((item, index) => (
+              <div
+                key={index}
+                style={menuItemStyle('coffee', index)}
+                onMouseEnter={() => setHoveredIndex({ section: 'coffee', index })}
+                onMouseLeave={() => setHoveredIndex({ section: null, index: null })}
+              >
+                <img src={item.img} alt={item.title} style={imageStyle('coffee', index)} />
+                <div style={titleStyle}>{item.title}</div>
+                <div style={descriptionStyle}>{item.description}</div>
+                <div style={priceStyle}>{item.price}</div>
+              </div>
+            ))}
+          </Slider>
         </div>
+      </div>
 
-        {/* Menu Item 2 */}
-        <div style={menuItemStyle}>
-          <img src={matchaSubreve} alt="Matcha Subreve" style={imageStyle} />
-          <h4 style={titleStyle}>Matcha Subreve</h4>
-          <div style={priceStyle}>P120</div>
+      {/* Breakfast Section */}
+      <div style={menuSectionStyle}>
+        <h2 style={headingStyle}>Breakfast</h2>
+        <div style={sliderContainerStyle}>
+          <Slider {...settings}>
+            {menuItems.breakfast.map((item, index) => (
+              <div
+                key={index}
+                style={menuItemStyle('breakfast', index)}
+                onMouseEnter={() => setHoveredIndex({ section: 'breakfast', index })}
+                onMouseLeave={() => setHoveredIndex({ section: null, index: null })}
+              >
+                <img src={item.img} alt={item.title} style={imageStyle('breakfast', index)} />
+                <div style={titleStyle}>{item.title}</div>
+                <div style={descriptionStyle}>{item.description}</div>
+                <div style={priceStyle}>{item.price}</div>
+              </div>
+            ))}
+          </Slider>
         </div>
+      </div>
 
-        {/* Add more menu items here */}
-        <div style={menuItemStyle}>
-          <img src={icebiscoff} alt="Ice Biscoff" style={imageStyle} />
-          <h4 style={titleStyle}>Ice Biscoff</h4>
-          <div style={priceStyle}>P120</div>
+      {/* Baked Cookies Section */}
+      <div style={menuSectionStyle}>
+        <h2 style={headingStyle}>Baked Cookies</h2>
+        <div style={sliderContainerStyle}>
+          <Slider {...settings}>
+            {menuItems.cookies.map((item, index) => (
+              <div
+                key={index}
+                style={menuItemStyle('cookies', index)}
+                onMouseEnter={() => setHoveredIndex({ section: 'cookies', index })}
+                onMouseLeave={() => setHoveredIndex({ section: null, index: null })}
+              >
+                <img src={item.img} alt={item.title} style={imageStyle('cookies', index)} />
+                <div style={titleStyle}>{item.title}</div>
+                <div style={descriptionStyle}>{item.description}</div>
+                <div style={priceStyle}>{item.price}</div>
+              </div>
+            ))}
+          </Slider>
         </div>
-
-
-      </Slider>
-    </section>
+      </div>
+    </div>
   );
 };
 

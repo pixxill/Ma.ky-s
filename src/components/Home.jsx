@@ -1,82 +1,119 @@
 import React, { useState } from 'react';
-import backgroundImage from '../assets/background.jpg'; // Adjust the path if necessary
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField } from '@mui/material'; // Import Material-UI components
+import backgroundImage from '../assets/background.jpg';
+import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 
 const Home = () => {
-  const [open, setOpen] = useState(false); // State to control the modal
+  const [open, setOpen] = useState(false);
+  const [bookingData, setBookingData] = useState({
+    first_name: '',
+    last_name: '',
+    contact_number: '',
+    email_address: '',
+    package: '',
+  });
 
-  // Function to handle opening the modal
   const handleClickOpen = () => {
     setOpen(true);
   };
 
-  // Function to handle closing the modal
   const handleClose = () => {
     setOpen(false);
   };
 
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setBookingData({ ...bookingData, [name]: value });
+  };
+
+  const handleBooking = () => {
+    const currentDateTime = new Date().toLocaleString('en-US', {
+      month: 'long',
+      day: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: true,
+    });
+
+    const newBooking = {
+      [`ID_${Math.floor(1000 + Math.random() * 9000)}`]: {
+        ...bookingData,
+        date_time: currentDateTime,
+      }
+    };
+
+    console.log(newBooking);
+
+    handleClose();
+  };
+
   const homeStyle = {
     position: 'relative',
-    height: '100vh',
+    minHeight: '100vh', // Ensures the Home component takes up the full height of the viewport
     display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
+    flexDirection: 'column',
+    justifyContent: 'center',
     paddingLeft: '50px',
     color: '#fff',
     fontFamily: "'Lobster', sans-serif",
   };
 
   const backgroundStyle = {
-    position: 'absolute',
+    position: 'fixed', // Ensures the background stays fixed even when scrolling
     top: 0,
     left: 0,
-    width: '100%',
-    height: '100%',
+    width: '100vw', // Covers the entire viewport width
+    height: '100vh', // Covers the entire viewport height
     backgroundImage: `url(${backgroundImage})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
-    opacity: 0.70, // Set background opacity to %
+    backgroundRepeat: 'no-repeat', // Prevents the image from repeating
+    opacity: 0.9,
     zIndex: -1,
   };
 
   const overlayStyle = {
-    position: 'absolute',
+    position: 'fixed', // Ensures the overlay stays fixed even when scrolling
     top: 0,
     left: 0,
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgba(0, 0, 0, 0.6)', // Darker overlay for better text visibility
+    width: '100vw',
+    height: '100vh',
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
     zIndex: -1,
   };
 
   const contentStyle = {
-    maxWidth: '600px',
-    padding: '20px',
-    borderRadius: '8px',
+    maxWidth: '550px',
+    textAlign: 'left',
     zIndex: 1,
   };
 
   const headingStyle = {
-    fontSize: '48px',
+    fontSize: '54px',
     marginBottom: '20px',
     fontWeight: 'bold',
+    lineHeight: '1.1',
   };
 
   const subHeadingStyle = {
-    fontSize: '32px',
-    marginBottom: '20px',
+    fontSize: '48px',
+    marginBottom: '25px',
+    lineHeight: '1.3',
+    fontWeight: 'bold',
+    letterSpacing: '0.5px',
   };
 
   const buttonStyle = {
     padding: '12px 24px',
-    backgroundColor: '#F5F7F8',
-    color: '#001524',
-    border: 'none',
+    backgroundColor: '#FFFFFF',
+    color: '#000',
+    border: '1px solid #fff',
     borderRadius: '4px',
     cursor: 'pointer',
     fontSize: '16px',
     fontWeight: 'bold',
     transition: 'background-color 0.3s ease',
+    marginTop: '15px',
   };
 
   const buttonHoverStyle = {
@@ -87,6 +124,7 @@ const Home = () => {
     <div style={homeStyle}>
       <div style={backgroundStyle} />
       <div style={overlayStyle} />
+
       <div style={contentStyle}>
         <h1 style={headingStyle}>Welcome to MA.KY's!</h1>
         <h2 style={subHeadingStyle}>Discover Amazing Coffee House & Get Energy</h2>
@@ -94,50 +132,75 @@ const Home = () => {
           style={buttonStyle}
           onMouseOver={(e) => (e.currentTarget.style.backgroundColor = buttonHoverStyle.backgroundColor)}
           onMouseOut={(e) => (e.currentTarget.style.backgroundColor = buttonStyle.backgroundColor)}
-          onClick={handleClickOpen} // Open the modal on button click
+          onClick={handleClickOpen}
         >
           Book now!
         </button>
       </div>
 
-      {/* Modal */}
       <Dialog open={open} onClose={handleClose}>
         <DialogTitle>Book a Table</DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
             margin="dense"
-            label="Your Name"
+            label="First Name"
             type="text"
             fullWidth
             variant="outlined"
+            name="first_name"
+            value={bookingData.first_name}
+            onChange={handleInputChange}
           />
           <TextField
             margin="dense"
-            label="Your Email"
+            label="Last Name"
+            type="text"
+            fullWidth
+            variant="outlined"
+            name="last_name"
+            value={bookingData.last_name}
+            onChange={handleInputChange}
+          />
+          <TextField
+            margin="dense"
+            label="Contact Number"
+            type="text"
+            fullWidth
+            variant="outlined"
+            name="contact_number"
+            value={bookingData.contact_number}
+            onChange={handleInputChange}
+          />
+          <TextField
+            margin="dense"
+            label="Email Address"
             type="email"
             fullWidth
             variant="outlined"
+            name="email_address"
+            value={bookingData.email_address}
+            onChange={handleInputChange}
           />
-          <TextField
-            margin="dense"
-            label="Number of People"
-            type="number"
-            fullWidth
-            variant="outlined"
-          />
-          <TextField
-            margin="dense"
-            label="Preferred Date & Time"
-            type="datetime-local"
-            fullWidth
-            variant="outlined"
-            InputLabelProps={{ shrink: true }} // To ensure the label doesn't overlap the value
-          />
+          <FormControl fullWidth margin="dense">
+            <InputLabel id="package-label">Package</InputLabel>
+            <Select
+              labelId="package-label"
+              label="Package"
+              name="package"
+              value={bookingData.package}
+              onChange={handleInputChange}
+              variant="outlined"
+            >
+              <MenuItem value="Basic Package">Basic Package</MenuItem>
+              <MenuItem value="Premium Package">Premium Package</MenuItem>
+              <MenuItem value="Deluxe Package">Deluxe Package</MenuItem>
+            </Select>
+          </FormControl>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="secondary">Cancel</Button>
-          <Button onClick={handleClose} color="primary">Book Now</Button>
+          <Button onClick={handleBooking} color="primary">Book Now</Button>
         </DialogActions>
       </Dialog>
     </div>

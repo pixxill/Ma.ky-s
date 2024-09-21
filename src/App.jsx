@@ -1,12 +1,12 @@
 import React from 'react';
 import { Element } from 'react-scroll';
-import Header from './components/header/header';
+import Header from './components/header/Header';
 import Home from './components/Home';
 import About from './components/About';
-import Menu from './components/header/Menu'
-import Contact from './components/Contact'
-import Location from './components/Location'
-
+import Menu from './components/header/Menu';
+import Contact from './components/Contact';
+import Location from './components/Location';
+import Footer from './components/Footer';
 const App = () => {
   return (
     <>
@@ -25,6 +25,9 @@ const App = () => {
       </Element>
       <Element name="Location">
         <Location />
+      </Element>
+      <Element name="Footer">
+        <Footer />
       </Element>
       
       

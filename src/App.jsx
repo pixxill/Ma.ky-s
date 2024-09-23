@@ -7,6 +7,8 @@ import Menu from './components/header/Menu';
 import Contact from './components/Contact';
 import Location from './components/Location';
 import Footer from './components/Footer';
+import '@fontsource/roboto';
+
 const App = () => {
   return (
     <>
@@ -29,7 +31,6 @@ const App = () => {
       <Element name="Footer">
         <Footer />
       </Element>
-      
       
       
       

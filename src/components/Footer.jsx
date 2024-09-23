@@ -59,7 +59,7 @@ const Footer = () => {
           Friday: 10AM - 09PM
         </Typography>
         <Typography variant="body2" sx={{ margin: '10px 0' }}>
-          Sunday: Closed
+          Sunday: 12PM - 09PM
         </Typography>
       </Box>
     </Box>

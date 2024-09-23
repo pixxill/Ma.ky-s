@@ -15,6 +15,7 @@ const CoffeeHouseSection = () => {
     color: '#fff',
     fontFamily: "'Poppins', sans-serif", // Use a more elegant font family
     padding: '40px 20px',
+    opacity: 0.9,
   };
 
   const contentStyle = {
@@ -46,7 +47,7 @@ const CoffeeHouseSection = () => {
   const headingStyle = {
     fontSize: '28px',
     fontWeight: '700',
-    color: '#ffc107', // Gold color for headings to match a coffee theme
+    color: '#EDE8DC', // Gold color for headings to match a coffee theme
     textTransform: 'uppercase',
     marginBottom: '20px',
   };
@@ -80,7 +81,7 @@ const CoffeeHouseSection = () => {
   };
 
   const listIconStyle = {
-    color: '#ffc107', // Gold checkmark
+    color: '#EDE8DC', // Gold checkmark
     fontSize: '20px',
     marginRight: '10px',
   };
@@ -110,20 +111,20 @@ const CoffeeHouseSection = () => {
         <div style={textStyle}>
           <h2 style={headingStyle}>About Us</h2>
           <h3 style={subHeadingStyle}>
-            Fresh Quality And Organic Tasty Coffee House For You
+          Discover Our Premium, Handcrafted Blends Perfectly Brewed Just for You!
           </h3>
           <p style={paragraphStyle}>
-            There are many variations of passages of Lorem Ipsum available, but the majority have suffered alteration in some form, by injected humour, or randomised words which don’t look even slightly believable.
+          Indulge in the finest selection of organic coffee, where every sip is a journey of rich flavors and aromas. Join us at MA.KY's, the ultimate destination for coffee lovers who crave the extraordinary. 
           </p>
           <ul style={listStyle}>
             <li style={listItemStyle}>
-              <span style={listIconStyle}>✔</span> At vero eos et accusamus et iusto odio
+              <span style={listIconStyle}>✔</span> Ethically sourced beans, roasted to perfection.
             </li>
             <li style={listItemStyle}>
-              <span style={listIconStyle}>✔</span> Established fact that a reader will be distracted
+              <span style={listIconStyle}>✔</span> Enjoy a cozy ambiance and exceptional service.
             </li>
             <li style={listItemStyle}>
-              <span style={listIconStyle}>✔</span> Sed ut perspiciatis unde omnis iste natus sit
+              <span style={listIconStyle}>✔</span> From bean to cup, quality is our commitment.
             </li>
           </ul>
         </div>

@@ -1,15 +1,38 @@
 import React, { useState } from 'react';
 import backgroundImage from '../assets/background.jpg';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+  Typography
+} from '@mui/material';
+
+// Image imports for the packages modal
+import packageImage1 from '../assets/package1.png';
+import packageImage2 from '../assets/package2.png';
+import packageImage3 from '../assets/package3.png';
+import packageImage4 from '../assets/package4.png'; // New image import
+import packageImage5 from '../assets/package5.png'; // New image import
 
 const Home = () => {
   const [open, setOpen] = useState(false);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [packagesOpen, setPackagesOpen] = useState(false); 
   const [bookingData, setBookingData] = useState({
     first_name: '',
     last_name: '',
     contact_number: '',
     email_address: '',
     package: '',
+    date: '',
+    time: '',
   });
 
   const handleClickOpen = () => {
@@ -20,60 +43,128 @@ const Home = () => {
     setOpen(false);
   };
 
+  const handleConfirmationClose = () => {
+    setConfirmationOpen(false);
+  };
+
+  const handlePackagesOpen = () => {
+    setPackagesOpen(true);
+  };
+
+  const handlePackagesClose = () => {
+    setPackagesOpen(false);
+  };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setBookingData({ ...bookingData, [name]: value });
   };
 
-  const handleBooking = () => {
-    const currentDateTime = new Date().toLocaleString('en-US', {
-      month: 'long',
-      day: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true,
-    });
+  // Function to generate a unique 3-digit random ID
+  const generateUniqueId = (existingNumbers) => {
+    let randomId;
+    do {
+      randomId = Math.floor(Math.random() * 1000).toString().padStart(3, '0'); // Generate 3-digit random number
+    } while (existingNumbers.includes(parseInt(randomId))); // Ensure ID is unique
+    return `ID_${randomId}`;
+  };
 
-    const newBooking = {
-      [`ID_${Math.floor(1000 + Math.random() * 9000)}`]: {
+  const handleBooking = async () => {
+    try {
+      const response = await fetch('https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings.json');
+      
+      if (!response.ok) {
+        const errorDetails = await response.json();
+        console.error('Failed to fetch bookings. Status:', response.status, 'Details:', errorDetails);
+        alert('Error fetching bookings: ' + errorDetails.message);
+        throw new Error('Network response was not ok');
+      }
+  
+      const bookings = await response.json();
+  
+      const existingNumbers = bookings ? Object.keys(bookings).map((key) => parseInt(key.replace('ID_', ''))) : [];
+  
+      // Generate a unique 3-digit ID
+      const uniqueId = generateUniqueId(existingNumbers);
+  
+      const currentDateTime = new Date().toLocaleString('en-US', {
+        month: 'long',
+        day: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true,
+      });
+  
+      const newBooking = {
         ...bookingData,
         date_time: currentDateTime,
+      };
+  
+      const postResponse = await fetch(`https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings/${uniqueId}.json`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newBooking),
+      });
+  
+      if (!postResponse.ok) {
+        const errorDetails = await postResponse.json();
+        console.error('Failed to submit booking. Status:', postResponse.status, 'Details:', errorDetails);
+        alert('Error submitting booking: ' + errorDetails.message);
+        throw new Error('Network response was not ok');
       }
-    };
+  
+      const data = await postResponse.json();
+      console.log('Booking successful:', data);
+      setConfirmationOpen(true);
 
-    console.log(newBooking);
-
+      // Reset the booking form after successful submission
+      setBookingData({
+        first_name: '',
+        last_name: '',
+        contact_number: '',
+        email_address: '',
+        package: '',
+        date: '',
+        time: '',
+      });
+  
+    } catch (error) {
+      console.error('Error submitting booking:', error);
+    }
+  
     handleClose();
   };
 
   const homeStyle = {
     position: 'relative',
-    minHeight: '100vh', // Ensures the Home component takes up the full height of the viewport
+    minHeight: '100vh',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'center',
     paddingLeft: '50px',
     color: '#fff',
-    fontFamily: "'Lobster', sans-serif",
+    fontFamily: "'Roboto', san-serif",
   };
 
   const backgroundStyle = {
-    position: 'fixed', // Ensures the background stays fixed even when scrolling
+    position: 'fixed',
     top: 0,
     left: 0,
-    width: '100vw', // Covers the entire viewport width
-    height: '100vh', // Covers the entire viewport height
+    width: '100vw',
+    height: '100vh',
     backgroundImage: `url(${backgroundImage})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat', // Prevents the image from repeating
+    backgroundRepeat: 'no-repeat',
     opacity: 0.9,
     zIndex: -1,
   };
 
   const overlayStyle = {
-    position: 'fixed', // Ensures the overlay stays fixed even when scrolling
+    position: 'fixed',
     top: 0,
     left: 0,
     width: '100vw',
@@ -104,20 +195,102 @@ const Home = () => {
   };
 
   const buttonStyle = {
-    padding: '12px 24px',
-    backgroundColor: '#FFFFFF',
-    color: '#000',
-    border: '1px solid #fff',
-    borderRadius: '4px',
+    padding: '12px 36px',
+    backgroundColor: 'transparent',
+    color: '#F5EFFF',
+    border: '2px solid #F5EFFF',
+    borderRadius: '100px',
     cursor: 'pointer',
     fontSize: '16px',
     fontWeight: 'bold',
-    transition: 'background-color 0.3s ease',
-    marginTop: '15px',
+    fontFamily: "'Poppins', sans-serif",
+    transition: 'all 0.3s ease',
+    marginTop: '100px',
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
   };
 
   const buttonHoverStyle = {
-    backgroundColor: '#838383',
+    backgroundColor: '#333',
+    color: '#fff',
+  };
+
+  // Updated dialogStyle with dirty white / grayish color
+  const dialogStyle = {
+    padding: '30px 40px',
+    borderRadius: '20px',
+    backgroundColor: '#EDE8DC', // Changed background to dirty white / grayish color
+    boxShadow: '0 12px 36px rgba(0, 0, 0, 0.2)',
+    color: '#333',
+    maxWidth: '600px', // Limit dialog width for better design
+    width: '100%', // Ensure it is responsive
+    textAlign: 'center',
+  };
+
+  const titleStyle = {
+    fontFamily: "'Poppins', sans-serif",
+    fontSize: '28px',
+    fontWeight: 800,
+    textAlign: 'center',
+    color: '#333',
+    marginBottom: '15px',
+    paddingBottom: '10px',
+    borderBottom: '1px solid #ccc',
+  };
+
+  const textFieldStyle = {
+    marginBottom: '15px',
+    '& .MuiOutlinedInput-root': {
+      borderRadius: '12px',
+      backgroundColor: '#f9f9f9',
+      color: '#333',
+      boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+      '& fieldset': {
+        borderColor: '#ddd',
+      },
+      '&:hover fieldset': {
+        borderColor: '#ccc',
+      },
+      '&.Mui-focused fieldset': {
+        borderColor: '#aaa',
+      },
+    },
+    '& .MuiInputLabel-root': {
+      color: '#555',
+    },
+  };
+
+  const dialogActionsStyle = {
+    padding: '15px 30px',
+    display: 'flex',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  };
+
+  const dialogButtonStyle = {
+    background: 'linear-gradient(90deg, #3f2b96, #a8c0ff)',
+    color: '#fff',
+    padding: '12px 24px',
+    borderRadius: '15px',
+    fontWeight: 'bold',
+    boxShadow: '0 6px 12px rgba(0, 0, 0, 0.2)',
+    transition: 'background-color 0.3s ease, transform 0.3s ease',
+    '&:hover': {
+      transform: 'translateY(-3px)',
+      background: 'linear-gradient(90deg, #3f2b96, #6a5acd)',
+    },
+  };
+
+  const packageImageStyle = {
+    width: '100%',
+    height: 'auto',
+    borderRadius: '15px',
+    marginBottom: '15px',
+    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+    '&:hover': {
+      transform: 'scale(1.05)',
+      boxShadow: '0 8px 16px rgba(0, 0, 0, 0.3)', // Add more shadow on hover
+    },
   };
 
   return (
@@ -126,20 +299,42 @@ const Home = () => {
       <div style={overlayStyle} />
 
       <div style={contentStyle}>
-        <h1 style={headingStyle}>Welcome to MA.KY's!</h1>
+        <h1 style={headingStyle}> MA.KY's!</h1>
         <h2 style={subHeadingStyle}>Discover Amazing Coffee House & Get Energy</h2>
         <button
           style={buttonStyle}
-          onMouseOver={(e) => (e.currentTarget.style.backgroundColor = buttonHoverStyle.backgroundColor)}
-          onMouseOut={(e) => (e.currentTarget.style.backgroundColor = buttonStyle.backgroundColor)}
+          onMouseOver={(e) => {
+            e.currentTarget.style.backgroundColor = buttonHoverStyle.backgroundColor;
+            e.currentTarget.style.color = buttonHoverStyle.color;
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.backgroundColor = buttonStyle.backgroundColor;
+            e.currentTarget.style.color = buttonStyle.color;
+          }}
           onClick={handleClickOpen}
         >
           Book now!
         </button>
+        <button
+          style={buttonStyle}
+          onMouseOver={(e) => {
+            e.currentTarget.style.backgroundColor = buttonHoverStyle.backgroundColor;
+            e.currentTarget.style.color = buttonHoverStyle.color;
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.backgroundColor = buttonStyle.backgroundColor;
+            e.currentTarget.style.color = buttonStyle.color;
+          }}
+          onClick={handlePackagesOpen}
+        >
+          Packages
+        </button>
       </div>
 
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle>Book a Table</DialogTitle>
+      <Dialog open={open} onClose={handleClose} PaperProps={{ style: dialogStyle }}>
+        <DialogTitle>
+          <Typography style={titleStyle}>Fill Out Your Details</Typography>
+        </DialogTitle>
         <DialogContent>
           <TextField
             autoFocus
@@ -151,6 +346,7 @@ const Home = () => {
             name="first_name"
             value={bookingData.first_name}
             onChange={handleInputChange}
+            style={textFieldStyle}
           />
           <TextField
             margin="dense"
@@ -161,6 +357,7 @@ const Home = () => {
             name="last_name"
             value={bookingData.last_name}
             onChange={handleInputChange}
+            style={textFieldStyle}
           />
           <TextField
             margin="dense"
@@ -171,6 +368,7 @@ const Home = () => {
             name="contact_number"
             value={bookingData.contact_number}
             onChange={handleInputChange}
+            style={textFieldStyle}
           />
           <TextField
             margin="dense"
@@ -181,8 +379,38 @@ const Home = () => {
             name="email_address"
             value={bookingData.email_address}
             onChange={handleInputChange}
+            style={textFieldStyle}
           />
-          <FormControl fullWidth margin="dense">
+          <TextField
+            margin="dense"
+            label="Date"
+            type="date"
+            fullWidth
+            variant="outlined"
+            name="date"
+            value={bookingData.date}
+            onChange={handleInputChange}
+            style={textFieldStyle}
+            InputLabelProps={{
+              shrink: true,
+            }}
+          />
+          <FormControl fullWidth margin="dense" style={textFieldStyle}>
+            <InputLabel id="time-slot-label">Time Slot</InputLabel>
+            <Select
+              labelId="time-slot-label"
+              label="Time Slot"
+              name="time"
+              value={bookingData.time}
+              onChange={handleInputChange}
+              variant="outlined"
+              style={{ backgroundColor: '#EDE8DC', color: '#000000' }}
+            >
+              <MenuItem value="8:00 AM - 11:00 PM">8:00 AM - 11:00 AM</MenuItem>
+              <MenuItem value="1:00 PM - 5:00 PM">1:00 PM - 5:00 PM</MenuItem>
+            </Select>
+          </FormControl>
+          <FormControl fullWidth margin="dense" style={textFieldStyle}>
             <InputLabel id="package-label">Package</InputLabel>
             <Select
               labelId="package-label"
@@ -191,16 +419,47 @@ const Home = () => {
               value={bookingData.package}
               onChange={handleInputChange}
               variant="outlined"
+              style={{ backgroundColor: '#EDE8DC', color: '#00000' }}
             >
-              <MenuItem value="Basic Package">Basic Package</MenuItem>
-              <MenuItem value="Premium Package">Premium Package</MenuItem>
-              <MenuItem value="Deluxe Package">Deluxe Package</MenuItem>
+              <MenuItem value="3000Php">3000Php</MenuItem>
+              <MenuItem value="4000Php">4000Php</MenuItem>
+              <MenuItem value="VIP Package">VIP Package</MenuItem>
             </Select>
           </FormControl>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose} color="secondary">Cancel</Button>
-          <Button onClick={handleBooking} color="primary">Book Now</Button>
+        <DialogActions style={dialogActionsStyle}>
+          <Button onClick={handleClose} style={dialogButtonStyle}>Cancel</Button>
+          <Button onClick={handleBooking} style={dialogButtonStyle}>Book Now</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Confirmation Dialog */}
+      <Dialog open={confirmationOpen} onClose={handleConfirmationClose} PaperProps={{ style: dialogStyle }}>
+        <DialogTitle>
+          <Typography style={titleStyle}>Booking Confirmed!</Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Typography>Your booking has been successfully completed!</Typography>
+        </DialogContent>
+        <DialogActions style={dialogActionsStyle}>
+          <Button onClick={handleConfirmationClose} style={dialogButtonStyle}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Packages Dialog */}
+      <Dialog open={packagesOpen} onClose={handlePackagesClose} PaperProps={{ style: dialogStyle }}>
+        <DialogTitle>
+          <Typography style={titleStyle}>Our Packages</Typography>
+        </DialogTitle>
+        <DialogContent>
+          <img src={packageImage1} alt="Basic Package" style={packageImageStyle} />
+          <img src={packageImage2} alt="Premium Package" style={packageImageStyle} />
+          <img src={packageImage3} alt="VIP Package" style={packageImageStyle} />
+          <img src={packageImage4} alt="Exclusive Package" style={packageImageStyle} /> {/* New image added */}
+          <img src={packageImage5} alt="Luxury Package" style={packageImageStyle} /> {/* New image added */}
+        </DialogContent>
+        <DialogActions style={dialogActionsStyle}>
+          <Button onClick={handlePackagesClose} style={dialogButtonStyle}>Close</Button>
         </DialogActions>
       </Dialog>
     </div>

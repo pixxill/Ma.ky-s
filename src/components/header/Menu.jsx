@@ -1,21 +1,51 @@
-import React from 'react';
-import Slider from 'react-slick'; // Import the Slider component
-import 'slick-carousel/slick/slick.css'; // Import slick carousel CSS
-import 'slick-carousel/slick/slick-theme.css'; // Import slick carousel theme CSS
-import backgroundImage from '../../assets/menu.jpg'; // Replace with your actual background image path
-import spanishLatte from '../../assets/spanishLatte.png'; // Placeholder image for Coffee
-import matchaSubreve from '../../assets/matchsubreve.png'; // Placeholder image for Coffee
-import icebiscoff from '../../assets/icebiscoff.png'; // Placeholder image for Coffee
-import breakfastImage from '../../assets/breakfast.jpg'; // Placeholder image for Breakfast
-import cookiesImage from '../../assets/cookies.jpg'; // Placeholder image for Baked Cookies
+// components/MenuSection.jsx
+import React, { useState, useEffect } from 'react';
+import Slider from 'react-slick';
+import { ref as databaseRef, get } from 'firebase/database';
+import { realtimeDb } from '../../Firebase';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
+import backgroundImage from '../../assets/menu.jpg';
 
 const MenuSection = () => {
+  const [menuItems, setMenuItems] = useState({ coffee: [], breakfast: [], cookies: [] });
+
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      try {
+        const coffeeItems = await fetchItemsFromDatabase('Menu/Coffee');
+        const breakfastItems = await fetchItemsFromDatabase('Menu/Breakfast');
+        const cookiesItems = await fetchItemsFromDatabase('Menu/Baked Cookies');
+
+        setMenuItems({
+          coffee: coffeeItems,
+          breakfast: breakfastItems,
+          cookies: cookiesItems,
+        });
+      } catch (error) {
+        console.error('Error fetching menu items:', error);
+      }
+    };
+
+    fetchMenuItems();
+  }, []);
+
+  const fetchItemsFromDatabase = async (path) => {
+    const dbRef = databaseRef(realtimeDb, path);
+    const snapshot = await get(dbRef);
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      return Object.values(data);
+    }
+    return [];
+  };
+
   const sectionStyle = {
-    position: 'relative', // Needed for overlay positioning
+    position: 'relative',
     padding: '50px 20px',
-    color: '#fff', // Set section text color to white
+    color: '#fff',
     fontFamily: "'Poppins', sans-serif",
-    overflow: 'hidden', // Hide overflow to ensure clean edges
+    overflow: 'hidden',
   };
 
   const backgroundOverlayStyle = {
@@ -24,12 +54,12 @@ const MenuSection = () => {
     left: 0,
     width: '100%',
     height: '100%',
-    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${backgroundImage})`, // Dark gradient overlay
+    backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${backgroundImage})`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
-    opacity: 0.9, // Set opacity to 0.9
-    zIndex: -1, // Position behind content
+    opacity: 0.9,
+    zIndex: -1,
   };
 
   const mainHeadingStyle = {
@@ -37,8 +67,8 @@ const MenuSection = () => {
     fontSize: '48px',
     fontWeight: '700',
     marginBottom: '30px',
-    color: '#EDE8DC', // Golden color for the main heading
-    textShadow: '0 4px 8px rgba(0, 0, 0, 0.5)', // Shadow for text
+    color: '#EDE8DC',
+    textShadow: '0 4px 8px rgba(0, 0, 0, 0.5)',
   };
 
   const headingStyle = {
@@ -46,80 +76,91 @@ const MenuSection = () => {
     fontSize: '36px',
     fontWeight: '700',
     marginBottom: '40px',
-    color: '#EDE8DC', // Golden color for section headings
-    textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', // Shadow for text
+    color: '#EDE8DC',
+    textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)',
   };
 
   const menuSectionStyle = {
-    marginBottom: '60px', // Space between sections
+    marginBottom: '60px',
   };
 
   const menuItemStyle = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Transparent white background for each card
-    padding: '20px',
-    borderRadius: '16px',
+    justifyContent: 'center',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backdropFilter: 'blur(10px)',
+    padding: '15px',
+    borderRadius: '12px',
     margin: '0 10px',
-    boxShadow: '0 8px 16px rgba(0, 0, 0, 0.5)', // Darker shadow for more depth
+    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.3)',
     textAlign: 'center',
-    minWidth: '250px',
-    border: '1px solid rgba(255, 255, 255, 0.2)', // Light border for better definition
-    transition: 'transform 0.3s ease, box-shadow 0.3s ease', // Smooth hover effect
-    '&:hover': {
-      transform: 'scale(1.05)', // Slight scale on hover
-      boxShadow: '0 12px 24px rgba(0, 0, 0, 0.6)', // Enhanced shadow on hover
-    },
+    width: '220px',
+    height: '420px',
+    border: '1px solid rgba(255, 255, 255, 0.1)',
+    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+  };
+
+  const imageContainerStyle = {
+    width: '100%',
+    height: '250px',
+    overflow: 'hidden',
+    display: 'flex', // Use flex to center the image
+    alignItems: 'center', // Center vertically
+    justifyContent: 'center', // Center horizontally
+    borderRadius: '8px',
+    marginBottom: '15px',
   };
 
   const imageStyle = {
-    width: '70%', // Full width of the card
-    height: '150px', // Adjust height to make it rectangular
-    borderRadius: '12px', // Slightly rounded corners for card view
-    marginBottom: '15px',
-    objectFit: 'cover', // Cover the container size
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.5)', // Darker shadow for image
-    transition: 'transform 0.3s ease', // Smooth scaling effect
-    '&:hover': {
-      transform: 'scale(1.05)', // Slight scale on hover
-    },
+    maxWidth: '100%',
+    maxHeight: '100%',
+    objectFit: 'cover',
+    borderRadius: '8px',
+    transition: 'transform 0.3s ease',
   };
 
   const titleStyle = {
-    fontSize: '22px',
+    textAlign: 'center',
+    fontSize: '18px',
     fontWeight: '700',
     marginBottom: '8px',
-    color: '#EDE8DC', // Golden color for titles
-    textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', // Text shadow for titles
+    color: '#EDE8DC',
+    textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
   };
 
   const descriptionStyle = {
-    fontSize: '16px',
+    textAlign: 'center',
+    fontSize: '14px',
     marginBottom: '8px',
-    color: '#ddd', // Light gray color for descriptions
+    color: '#ddd',
   };
 
   const priceStyle = {
-    fontSize: '20px',
+    textAlign: 'center',
+    fontSize: '16px',
     fontWeight: '700',
-    color: '#EDE8DC', // Golden color for price
-    textShadow: '0 2px 4px rgba(0, 0, 0, 0.5)', // Text shadow for price
+    color: '#EDE8DC',
+    textShadow: '0 1px 2px rgba(0, 0, 0, 0.5)',
   };
 
-  // Settings for the slider
   const settings = {
     dots: true,
     infinite: true,
     speed: 500,
     slidesToShow: 3,
     slidesToScroll: 1,
+    centerMode: true,
+    centerPadding: '10px',
     responsive: [
       {
         breakpoint: 1024,
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
+          centerMode: true,
+          centerPadding: '10px',
         },
       },
       {
@@ -127,42 +168,34 @@ const MenuSection = () => {
         settings: {
           slidesToShow: 1,
           slidesToScroll: 1,
+          centerMode: true,
+          centerPadding: '20px',
         },
       },
     ],
   };
 
-  const menuItems = {
-    coffee: [
-      { img: spanishLatte, title: 'Spanish Latte', description: 'Milk with vanilla flavored', price: 'P120' },
-      { img: matchaSubreve, title: 'Matcha Subreve', description: 'Milk with vanilla flavored', price: 'P120' },
-      { img: icebiscoff, title: 'Ice Biscoff', description: 'Milk with vanilla flavored', price: 'P120' },
-    ],
-    breakfast: [
-      { img: breakfastImage, title: 'Pancakes', description: 'With syrup and butter', price: 'P80' },
-      { img: breakfastImage, title: 'Omelette', description: 'Cheese and vegetables', price: 'P100' },
-    ],
-    cookies: [
-      { img: cookiesImage, title: 'Chocolate Chip', description: 'Milk with vanilla flavored', price: 'P50' },
-      { img: cookiesImage, title: 'Oatmeal Raisin', description: 'Oatmeal and raisin flavor', price: 'P50' },
-    ],
+  const getSliderSettings = (itemsLength) => {
+    return {
+      ...settings,
+      slidesToShow: itemsLength < 3 ? itemsLength : 3,
+      infinite: itemsLength > 1,
+    };
   };
 
   return (
     <div style={sectionStyle}>
-      {/* Background Overlay */}
       <div style={backgroundOverlayStyle}></div>
-
-      {/* Main Heading */}
       <h1 style={mainHeadingStyle}>Explore Our Menu</h1>
 
-      {/* Coffee Section */}
       <div style={menuSectionStyle}>
         <h2 style={headingStyle}>Coffee</h2>
-        <Slider {...settings}>
+        <Slider {...getSliderSettings(menuItems.coffee.length)}>
           {menuItems.coffee.map((item, index) => (
             <div key={index} style={menuItemStyle}>
-              <img src={item.img} alt={item.title} style={imageStyle} />
+              <div style={imageContainerStyle}>
+                <img src={item.imageUrl} alt={item.title} style={imageStyle} />
+              </div>
               <div style={titleStyle}>{item.title}</div>
               <div style={descriptionStyle}>{item.description}</div>
               <div style={priceStyle}>{item.price}</div>
@@ -171,13 +204,14 @@ const MenuSection = () => {
         </Slider>
       </div>
 
-      {/* Breakfast Section */}
       <div style={menuSectionStyle}>
         <h2 style={headingStyle}>Breakfast</h2>
-        <Slider {...settings}>
+        <Slider {...getSliderSettings(menuItems.breakfast.length)}>
           {menuItems.breakfast.map((item, index) => (
             <div key={index} style={menuItemStyle}>
-              <img src={item.img} alt={item.title} style={imageStyle} />
+              <div style={imageContainerStyle}>
+                <img src={item.imageUrl} alt={item.title} style={imageStyle} />
+              </div>
               <div style={titleStyle}>{item.title}</div>
               <div style={descriptionStyle}>{item.description}</div>
               <div style={priceStyle}>{item.price}</div>
@@ -186,22 +220,24 @@ const MenuSection = () => {
         </Slider>
       </div>
 
-      {/* Baked Cookies Section */}
       <div style={menuSectionStyle}>
         <h2 style={headingStyle}>Baked Cookies</h2>
-        <Slider {...settings}>
+        <Slider {...getSliderSettings(menuItems.cookies.length)}>
           {menuItems.cookies.map((item, index) => (
             <div key={index} style={menuItemStyle}>
-              <img src={item.img} alt={item.title} style={imageStyle} />
+              <div style={imageContainerStyle}>
+                <img src={item.imageUrl} alt={item.title} style={imageStyle} />
+              </div>
               <div style={titleStyle}>{item.title}</div>
               <div style={descriptionStyle}>{item.description}</div>
               <div style={priceStyle}>{item.price}</div>
             </div>
           ))}
         </Slider>
-      </div>  
+      </div>
     </div>
   );
 };
 
 export default MenuSection;
+  

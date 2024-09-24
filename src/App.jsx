@@ -10,9 +10,12 @@ import Location from './components/Location';
 import Footer from './components/Footer';
 import AdminLogin from './components/AdminLogin';
 import DashboardLayout from './components/DashboardLayout'; // Dashboard with sidebar
-import AdminDashboard from './components/header/AdminDashboard';
-import AdminMenu from './components/AdminMenu';
-import AdminBookings from './components/AdminBookings';
+import AdminDashboard from './components/header/AdminDashboard'; // Corrected path to AdminDashboard
+import UploadMenuItem from './components/AdminMenu'; // Admin Menu component
+import AdminBookings from './components/AdminBookings'; // Admin Bookings component
+import AdminReport from './components/AdminReport'; // Admin Report component
+import AdminPackage from './components/AdminPackage'; // Admin Package component
+import Sidebar from './components/Sidebar'; // Sidebar component for navigation
 import '@fontsource/roboto';
 
 const App = () => {
@@ -49,11 +52,20 @@ const App = () => {
         {/* Admin login route */}
         <Route path="/admin" element={<AdminLogin />} />
 
-        {/* Admin Routes with DashboardLayout */}
-        <Route path="/admindashboard" element={<DashboardLayout />}>
+        {/* Admin Routes with Sidebar and DashboardLayout */}
+        <Route
+          path="/admindashboard"
+          element={
+            <DashboardLayout>
+              <Sidebar /> {/* Sidebar component */}
+            </DashboardLayout>
+          }
+        >
           <Route path="" element={<AdminDashboard />} /> {/* Default Admin Dashboard */}
-          <Route path="menu" element={<AdminMenu />} /> {/* Admin Menu */}
+          <Route path="adminmenu" element={<UploadMenuItem />} /> {/* Admin Menu Items */}
           <Route path="adminbookings" element={<AdminBookings />} /> {/* Admin Bookings */}
+          <Route path="adminreports" element={<AdminReport />} /> {/* Admin Reports */}
+          <Route path="adminpackage" element={<AdminPackage />} /> {/* Admin Packages */}
         </Route>
       </Routes>
     </Router>

@@ -5,22 +5,20 @@ import { ref as databaseRef, get } from 'firebase/database';
 import { realtimeDb } from '../../Firebase';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import backgroundImage from '../../assets/menu.jpg';
+import backgroundImage from '../../assets/menu.jpeg';
 
 const MenuSection = () => {
-  const [menuItems, setMenuItems] = useState({ coffee: [], breakfast: [], cookies: [] });
+  const [menuItems, setMenuItems] = useState({ coffee: [], breakfast: [] });
 
   useEffect(() => {
     const fetchMenuItems = async () => {
       try {
         const coffeeItems = await fetchItemsFromDatabase('Menu/Coffee');
         const breakfastItems = await fetchItemsFromDatabase('Menu/Breakfast');
-        const cookiesItems = await fetchItemsFromDatabase('Menu/Baked Cookies');
 
         setMenuItems({
           coffee: coffeeItems,
           breakfast: breakfastItems,
-          cookies: cookiesItems,
         });
       } catch (error) {
         console.error('Error fetching menu items:', error);
@@ -58,7 +56,7 @@ const MenuSection = () => {
     backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
-    opacity: 0.9,
+    opacity: 10,
     zIndex: -1,
   };
 
@@ -106,9 +104,9 @@ const MenuSection = () => {
     width: '100%',
     height: '250px',
     overflow: 'hidden',
-    display: 'flex', // Use flex to center the image
-    alignItems: 'center', // Center vertically
-    justifyContent: 'center', // Center horizontally
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderRadius: '8px',
     marginBottom: '15px',
   };
@@ -219,25 +217,8 @@ const MenuSection = () => {
           ))}
         </Slider>
       </div>
-
-      <div style={menuSectionStyle}>
-        <h2 style={headingStyle}>Baked Cookies</h2>
-        <Slider {...getSliderSettings(menuItems.cookies.length)}>
-          {menuItems.cookies.map((item, index) => (
-            <div key={index} style={menuItemStyle}>
-              <div style={imageContainerStyle}>
-                <img src={item.imageUrl} alt={item.title} style={imageStyle} />
-              </div>
-              <div style={titleStyle}>{item.title}</div>
-              <div style={descriptionStyle}>{item.description}</div>
-              <div style={priceStyle}>{item.price}</div>
-            </div>
-          ))}
-        </Slider>
-      </div>
     </div>
   );
 };
 
 export default MenuSection;
-  

@@ -1,6 +1,6 @@
 import React from 'react';
 import contentImage from '../assets/background.jpg'; // Replace with your actual image path
-import backgroundImage from '../assets/aboutbg.png'; // Replace with your actual background image path
+import backgroundImage from '../assets/aboutbg.jpeg'; // Replace with your actual background image path
 
 const CoffeeHouseSection = () => {
   const sectionStyle = {

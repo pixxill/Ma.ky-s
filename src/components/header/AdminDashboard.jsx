@@ -3,7 +3,7 @@ import { FiBarChart2, FiClipboard, FiPackage } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Grid, Card, CardContent, Avatar } from '@mui/material';
 
-const DashboardLayout = () => {
+const AdminDashboard = () => {
   const navigate = useNavigate();
 
   // Mock Booking Data
@@ -105,17 +105,16 @@ const DashboardLayout = () => {
   );
 };
 
-// Inline styles for DashboardLayout
+// Inline styles for AdminDashboard
 const styles = {
   dashboardContainer: {
     display: 'flex',
-    height: '100vh',
-    width: '100%', // Take full width of the screen
-    backgroundColor: '#f8f8f9', // Light background for the dashboard
-    justifyContent: 'center', // Center the content
-    alignItems: 'flex-start', // Align content at the top
-    padding: '20px', // Add padding around the content
-    overflowY: 'auto', // Allow vertical scrolling
+    width: '100%',
+    backgroundColor: '#f8f8f9',
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    padding: '20px',
+    overflowY: 'auto',
   },
   dashboardCard: {
     display: 'flex',
@@ -144,4 +143,4 @@ const styles = {
   },
 };
 
-export default DashboardLayout;
+export default AdminDashboard;

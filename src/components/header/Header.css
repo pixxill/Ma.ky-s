@@ -26,7 +26,7 @@
 /* Logo Styles */
 .header__logo {
   flex-shrink: 0; /* Prevent logo from shrinking */
-  margin-right: auto; /* Push the logo to the left */
+  margin-right: 57%; /* Push the logo to the left */
 }
 
 .header__logo-link {

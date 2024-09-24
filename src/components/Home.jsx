@@ -25,6 +25,7 @@ const Home = () => {
   const [open, setOpen] = useState(false);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [packagesOpen, setPackagesOpen] = useState(false); 
+  const [errors, setErrors] = useState({});
   const [bookingData, setBookingData] = useState({
     first_name: '',
     last_name: '',
@@ -41,6 +42,16 @@ const Home = () => {
 
   const handleClose = () => {
     setOpen(false);
+    setErrors({}); // Clear errors on close
+    setBookingData({  // Clear the form data on close
+      first_name: '',
+      last_name: '',
+      contact_number: '',
+      email_address: '',
+      package: '',
+      date: '',
+      time: '',
+    });
   };
 
   const handleConfirmationClose = () => {
@@ -60,16 +71,26 @@ const Home = () => {
     setBookingData({ ...bookingData, [name]: value });
   };
 
-  // Function to generate a unique 3-digit random ID
-  const generateUniqueId = (existingNumbers) => {
-    let randomId;
-    do {
-      randomId = Math.floor(Math.random() * 1000).toString().padStart(3, '0'); // Generate 3-digit random number
-    } while (existingNumbers.includes(parseInt(randomId))); // Ensure ID is unique
-    return `ID_${randomId}`;
+  const validateForm = () => {
+    let newErrors = {};
+    if (!bookingData.first_name.trim()) newErrors.first_name = 'First name is required';
+    if (!bookingData.last_name.trim()) newErrors.last_name = 'Last name is required';
+    if (!bookingData.contact_number.trim()) newErrors.contact_number = 'Contact number is required';
+    if (!bookingData.email_address.trim()) newErrors.email_address = 'Email address is required';
+    if (!bookingData.package) newErrors.package = 'Package selection is required';
+    if (!bookingData.date) newErrors.date = 'Date is required';
+    if (!bookingData.time) newErrors.time = 'Time slot selection is required';
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleBooking = async () => {
+    if (!validateForm()) {
+      alert('Please fill out all required fields.');
+      return;
+    }
+
     try {
       const response = await fetch('https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings.json');
       
@@ -136,6 +157,29 @@ const Home = () => {
     }
   
     handleClose();
+  };
+
+  const sendConfirmationEmail = (email, bookingDetails) => {
+    emailjs.send('YOUR_SERVICE_ID', 'YOUR_TEMPLATE_ID', {
+      to_name: `${bookingDetails.first_name} ${bookingDetails.last_name}`,
+      to_email: email,
+      booking_date: bookingDetails.date,
+      booking_time: bookingDetails.time,
+      booking_package: bookingDetails.package,
+    }, 'YOUR_USER_ID')
+    .then((response) => {
+      console.log('Email sent successfully:', response.status, response.text);
+    }, (error) => {
+      console.error('Failed to send email:', error);
+    });
+  };
+  
+  const generateUniqueId = (existingNumbers) => {
+    let randomId;
+    do {
+      randomId = Math.floor(Math.random() * 1000).toString().padStart(3, '0'); // Generate 3-digit random number
+    } while (existingNumbers.includes(parseInt(randomId))); // Ensure ID is unique
+    return `ID_${randomId}`;
   };
 
   const homeStyle = {
@@ -214,15 +258,14 @@ const Home = () => {
     color: '#fff',
   };
 
-  // Updated dialogStyle with dirty white / grayish color
   const dialogStyle = {
     padding: '30px 40px',
     borderRadius: '20px',
-    backgroundColor: '#EDE8DC', // Changed background to dirty white / grayish color
+    backgroundColor: '#EDE8DC',
     boxShadow: '0 12px 36px rgba(0, 0, 0, 0.2)',
     color: '#333',
-    maxWidth: '600px', // Limit dialog width for better design
-    width: '100%', // Ensure it is responsive
+    maxWidth: '600px',
+    width: '100%',
     textAlign: 'center',
   };
 
@@ -267,7 +310,7 @@ const Home = () => {
   };
 
   const dialogButtonStyle = {
-    background: 'linear-gradient(90deg, #3f2b96, #a8c0ff)',
+    background: 'linear-gradient(90deg, #5E5368, #000000)',
     color: '#fff',
     padding: '12px 24px',
     borderRadius: '15px',
@@ -346,6 +389,8 @@ const Home = () => {
             name="first_name"
             value={bookingData.first_name}
             onChange={handleInputChange}
+            error={!!errors.first_name} // Show error if there's a validation issue
+            helperText={errors.first_name} // Display error message
             style={textFieldStyle}
           />
           <TextField
@@ -357,6 +402,8 @@ const Home = () => {
             name="last_name"
             value={bookingData.last_name}
             onChange={handleInputChange}
+            error={!!errors.last_name}
+            helperText={errors.last_name}
             style={textFieldStyle}
           />
           <TextField
@@ -368,6 +415,8 @@ const Home = () => {
             name="contact_number"
             value={bookingData.contact_number}
             onChange={handleInputChange}
+            error={!!errors.contact_number}
+            helperText={errors.contact_number}
             style={textFieldStyle}
           />
           <TextField
@@ -379,6 +428,8 @@ const Home = () => {
             name="email_address"
             value={bookingData.email_address}
             onChange={handleInputChange}
+            error={!!errors.email_address}
+            helperText={errors.email_address}
             style={textFieldStyle}
           />
           <TextField
@@ -390,12 +441,14 @@ const Home = () => {
             name="date"
             value={bookingData.date}
             onChange={handleInputChange}
+            error={!!errors.date}
+            helperText={errors.date}
             style={textFieldStyle}
             InputLabelProps={{
               shrink: true,
             }}
           />
-          <FormControl fullWidth margin="dense" style={textFieldStyle}>
+          <FormControl fullWidth margin="dense" style={textFieldStyle} error={!!errors.time}>
             <InputLabel id="time-slot-label">Time Slot</InputLabel>
             <Select
               labelId="time-slot-label"
@@ -406,11 +459,14 @@ const Home = () => {
               variant="outlined"
               style={{ backgroundColor: '#EDE8DC', color: '#000000' }}
             >
-              <MenuItem value="8:00 AM - 11:00 PM">8:00 AM - 11:00 AM</MenuItem>
+              <MenuItem value="8:00 AM - 11:00 AM">8:00 AM - 11:00 AM</MenuItem>
               <MenuItem value="1:00 PM - 5:00 PM">1:00 PM - 5:00 PM</MenuItem>
             </Select>
+            <Typography variant="caption" color="error">
+              {errors.time}
+            </Typography>
           </FormControl>
-          <FormControl fullWidth margin="dense" style={textFieldStyle}>
+          <FormControl fullWidth margin="dense" style={textFieldStyle} error={!!errors.package}>
             <InputLabel id="package-label">Package</InputLabel>
             <Select
               labelId="package-label"
@@ -425,6 +481,9 @@ const Home = () => {
               <MenuItem value="4000Php">4000Php</MenuItem>
               <MenuItem value="VIP Package">VIP Package</MenuItem>
             </Select>
+            <Typography variant="caption" color="error">
+              {errors.package}
+            </Typography>
           </FormControl>
         </DialogContent>
         <DialogActions style={dialogActionsStyle}>

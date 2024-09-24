@@ -23,14 +23,14 @@ const Footer = () => {
           We are many variations of passages available but the majority have suffered alteration in some form by injected humour words which don’t look even slightly believable.
         </Typography>
         <Typography variant="body2" sx={{ margin: '10px 0' }}>
-          +2 123 654 7898
+          091222222 
         </Typography>
         <Typography variant="body2" sx={{ margin: '10px 0' }}>
-          25/B Milford Road, New York
+          CatmonFlores Bai!
         </Typography>
         <Typography variant="body2" sx={{ margin: '10px 0' }}>
           <Link href="mailto:info@example.com" sx={{ color: '#fff', textDecoration: 'none' }}>
-            info@example.com
+            GwapoKaayuSiXymmer@gmail.com
           </Link>
         </Typography>
       </Box>

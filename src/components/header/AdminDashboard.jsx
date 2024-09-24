@@ -1,79 +1,106 @@
-// components/DashboardLayout.jsx
 import React, { useState } from 'react';
-import { FiLogOut, FiBarChart2, FiClipboard, FiPackage } from 'react-icons/fi';
-import UploadMenuItem from './../AdminMenu'; // Import your UploadMenuItem component
+import { FiBarChart2, FiClipboard, FiPackage } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+import { Box, Typography, Grid, Card, CardContent, Avatar } from '@mui/material';
 
 const DashboardLayout = () => {
-  const [selectedComponent, setSelectedComponent] = useState('bookings');
+  const navigate = useNavigate();
 
-  const handleLogout = () => {
-    alert('You have been logged out!');
-    // You can add your logout logic here if necessary
+  // Mock Booking Data
+  const bookingData = {
+    contact_number: "123",
+    date: "2024-09-27",
+    date_time: "September 23, 2024 at 01:52 AM",
+    email_address: "ASDAS",
+    first_name: "ROCA",
+    last_name: "HURHUR",
+    package: "4000Php",
+    status: "active",
+    time: "1:00 PM - 5:00 PM",
   };
 
-  // Components to render
-  const renderComponent = () => {
-    switch (selectedComponent) {
-      case 'bookings':
-        return <div>Bookings Component</div>; // Replace with your actual bookings component
-      case 'analytics':
-        return <div>Analytics Component</div>; // Replace with your actual analytics component
-      case 'menu':
-        return <UploadMenuItem />; // Render the UploadMenuItem component when "Menu" is selected
-      case 'packages':
-        return <div>Packages Component</div>; // Replace with your actual packages component
-      default:
-        return <div>Select an option from the menu</div>;
-    }
+  // Route to different pages when a card is clicked
+  const handleCardClick = (route) => {
+    navigate(route);
   };
+
+  // Dashboard data for cards with routes
+  const dashboardData = [
+    { title: 'Bookings', count: 150, icon: <FiClipboard />, color: '#90caf9', route: '/admindashboard/adminbookings' },
+    { title: 'Menu Items', count: 45, icon: <FiPackage />, color: '#ffe082', route: '/admindashboard/adminmenu' },
+    { title: 'Packages', count: 20, icon: <FiBarChart2 />, color: '#ffab91', route: '/admindashboard/adminpackage' },
+  ];
 
   return (
     <div style={styles.dashboardContainer}>
-      <nav style={styles.sidebar}>
-        <div style={styles.logoContainer}>
-          <h2 style={styles.logo}>Admin Panel</h2>
-        </div>
-        <ul style={styles.navList}>
-          <li>
-            <button
-              onClick={() => setSelectedComponent('bookings')}
-              style={selectedComponent === 'bookings' ? { ...styles.navItem, ...styles.activeNavItem } : styles.navItem}
-            >
-              <FiClipboard style={styles.icon} /> Bookings
-            </button>
-          </li>
-          <li>
-            <button
-              onClick={() => setSelectedComponent('analytics')}
-              style={selectedComponent === 'analytics' ? { ...styles.navItem, ...styles.activeNavItem } : styles.navItem}
-            >
-              <FiBarChart2 style={styles.icon} /> Analytics
-            </button>
-          </li>
-          <li>
-            <button
-              onClick={() => setSelectedComponent('menu')}
-              style={selectedComponent === 'menu' ? { ...styles.navItem, ...styles.activeNavItem } : styles.navItem}
-            >
-              <FiPackage style={styles.icon} /> Menu
-            </button>
-          </li>
-          <li>
-            <button
-              onClick={() => setSelectedComponent('packages')}
-              style={selectedComponent === 'packages' ? { ...styles.navItem, ...styles.activeNavItem } : styles.navItem}
-            >
-              <FiPackage style={styles.icon} /> Packages
-            </button>
-          </li>
-        </ul>
-        <button onClick={handleLogout} style={styles.logoutButton}>
-          <FiLogOut style={styles.icon} /> Log Out
-        </button>
-      </nav>
-      <div style={styles.mainContent}>
-        {renderComponent()} {/* Render the selected component here */}
-      </div>
+      <Box p={3} style={{ width: '100%' }}>
+        <Typography variant="h4" gutterBottom>
+          Admin Dashboard
+        </Typography>
+        <Grid container spacing={3}>
+          {dashboardData.map((item, index) => (
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              <Card
+                style={styles.dashboardCard}
+                onClick={() => handleCardClick(item.route)} // Navigate when card is clicked
+              >
+                <Avatar style={{ ...styles.cardIcon, backgroundColor: item.color }}>
+                  {item.icon}
+                </Avatar>
+                <CardContent>
+                  <Typography variant="h5" style={{ fontWeight: 'bold' }}>
+                    {item.count}
+                  </Typography>
+                  <Typography variant="body2" color="textSecondary">
+                    {item.title}
+                  </Typography>
+                </CardContent>
+              </Card>
+            </Grid>
+          ))}
+        </Grid>
+
+        {/* Booking Info Card */}
+        <Box mt={5}>
+          <Card style={{ ...styles.bookingCard, padding: '20px' }}>
+            <Typography variant="h6" gutterBottom>
+              Latest Booking
+            </Typography>
+            <Grid container spacing={3}>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body1">
+                  <strong>First Name:</strong> {bookingData.first_name}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body1">
+                  <strong>Last Name:</strong> {bookingData.last_name}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body1">
+                  <strong>Email:</strong> {bookingData.email_address}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body1">
+                  <strong>Date:</strong> {bookingData.date}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body1">
+                  <strong>Time:</strong> {bookingData.time}
+                </Typography>
+              </Grid>
+              <Grid item xs={12} sm={6}>
+                <Typography variant="body1">
+                  <strong>Package:</strong> {bookingData.package}
+                </Typography>
+              </Grid>
+            </Grid>
+          </Card>
+        </Box>
+      </Box>
     </div>
   );
 };
@@ -83,89 +110,37 @@ const styles = {
   dashboardContainer: {
     display: 'flex',
     height: '100vh',
-    backgroundColor: '#e0e0e0',
+    width: '100%', // Take full width of the screen
+    backgroundColor: '#f8f8f9', // Light background for the dashboard
+    justifyContent: 'center', // Center the content
+    alignItems: 'flex-start', // Align content at the top
+    padding: '20px', // Add padding around the content
+    overflowY: 'auto', // Allow vertical scrolling
   },
-  sidebar: {
-    width: '220px',
-    backgroundColor: '#3a3f44',
-    color: '#ffffff',
-    display: 'flex',
-    flexDirection: 'column',
-    justifyContent: 'space-between',
-    padding: '15px 10px',
-    boxShadow: '2px 0 8px rgba(0, 0, 0, 0.1)',
-    borderRadius: '0 10px 10px 0',
-  },
-  logoContainer: {
-    padding: '0 10px',
-    textAlign: 'center',
-    borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-    paddingBottom: '15px',
-    marginBottom: '15px',
-  },
-  logo: {
-    fontSize: '22px',
-    fontWeight: '600',
-    fontFamily: '"Poppins", sans-serif',
-    color: '#ffffff',
-    letterSpacing: '0.5px',
-  },
-  navList: {
-    listStyle: 'none',
-    padding: 0,
-    margin: 0,
-    flexGrow: 1,
-  },
-  navItem: {
+  dashboardCard: {
     display: 'flex',
     alignItems: 'center',
-    padding: '12px 15px',
-    textDecoration: 'none',
-    color: '#c0c0c0',
-    margin: '5px 0',
-    borderRadius: '8px',
-    transition: 'background 0.3s, color 0.3s, transform 0.2s',
-    fontSize: '14px',
-    fontWeight: '500',
-    letterSpacing: '0.3px',
-    background: 'none',
-    border: 'none',
+    padding: '15px',
+    borderRadius: '15px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+    backgroundColor: '#ffffff',
     cursor: 'pointer',
+    transition: 'transform 0.2s, box-shadow 0.2s',
   },
-  activeNavItem: {
-    backgroundColor: '#4b5056',
-    color: '#ffffff',
-    transform: 'scale(1.05)',
-    boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+  bookingCard: {
+    backgroundColor: '#f8f9fa',
+    borderRadius: '15px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
   },
-  logoutButton: {
+  cardIcon: {
+    width: '50px',
+    height: '50px',
     display: 'flex',
-    alignItems: 'center',
     justifyContent: 'center',
-    padding: '12px 15px',
-    backgroundColor: '#e74c3c',
-    border: 'none',
+    alignItems: 'center',
+    marginRight: '15px',
+    fontSize: '24px',
     color: '#ffffff',
-    cursor: 'pointer',
-    borderRadius: '8px',
-    margin: '15px 10px',
-    transition: 'background-color 0.3s, transform 0.2s',
-    fontSize: '14px',
-    fontWeight: '600',
-  },
-  icon: {
-    marginRight: '10px',
-    fontSize: '18px',
-  },
-  mainContent: {
-    flexGrow: 1,
-    padding: '30px',
-    backgroundColor: '#f5f5f5',
-    borderRadius: '15px 0 0 15px',
-    boxShadow: '-5px 0 15px rgba(0, 0, 0, 0.05)',
-    margin: '20px',
-    overflowY: 'auto',
-    zIndex: 1,
   },
 };
 

@@ -9,13 +9,13 @@ import Contact from './components/Contact';
 import Location from './components/Location';
 import Footer from './components/Footer';
 import AdminLogin from './components/AdminLogin';
-import DashboardLayout from './components/DashboardLayout'; // Dashboard with sidebar
-import AdminDashboard from './components/header/AdminDashboard'; // Corrected path to AdminDashboard
-import UploadMenuItem from './components/AdminMenu'; // Admin Menu component
-import AdminBookings from './components/AdminBookings'; // Admin Bookings component
-import AdminReport from './components/AdminReport'; // Admin Report component
-import AdminPackage from './components/AdminPackage'; // Admin Package component
-import Sidebar from './components/Sidebar'; // Sidebar component for navigation
+import DashboardLayout from './components/DashboardLayout'; // Dashboard layout component
+import AdminDashboard from './components/header/AdminDashboard';
+import UploadMenuItem from './components/AdminMenu';
+import AdminBookings from './components/AdminBookings';
+import AdminReport from './components/AdminReport';
+import AdminPackage from './components/AdminPackage';
+import AdminHistory from './components/AdminHistory'; // Import AdminHistory component
 import '@fontsource/roboto';
 
 const App = () => {
@@ -49,23 +49,18 @@ const App = () => {
             </>
           }
         />
+        
         {/* Admin login route */}
         <Route path="/admin" element={<AdminLogin />} />
 
         {/* Admin Routes with Sidebar and DashboardLayout */}
-        <Route
-          path="/admindashboard"
-          element={
-            <DashboardLayout>
-              <Sidebar /> {/* Sidebar component */}
-            </DashboardLayout>
-          }
-        >
-          <Route path="" element={<AdminDashboard />} /> {/* Default Admin Dashboard */}
-          <Route path="adminmenu" element={<UploadMenuItem />} /> {/* Admin Menu Items */}
-          <Route path="adminbookings" element={<AdminBookings />} /> {/* Admin Bookings */}
-          <Route path="adminreports" element={<AdminReport />} /> {/* Admin Reports */}
-          <Route path="adminpackage" element={<AdminPackage />} /> {/* Admin Packages */}
+        <Route path="/admindashboard" element={<DashboardLayout />}>
+          <Route index element={<AdminDashboard />} /> {/* Default Admin Dashboard */}
+          <Route path="adminmenu" element={<UploadMenuItem />} />
+          <Route path="adminbookings" element={<AdminBookings />} />
+          <Route path="adminhistory" element={<AdminHistory />} /> {/* Use adminhistory to match sidebar link */}
+          <Route path="adminreports" element={<AdminReport />} />
+          <Route path="adminpackage" element={<AdminPackage />} />
         </Route>
       </Routes>
     </Router>

@@ -10,11 +10,14 @@ const DashboardLayout = () => {
       <Box 
         sx={{ 
           flexGrow: 1, 
-          padding: 0, // Remove padding to fit content precisely
           display: 'flex', 
-          justifyContent: 'center', 
-          alignItems: 'flex-start',
-          overflow: 'auto'
+          flexDirection: 'column', // Ensure vertical layout for content
+          justifyContent: 'flex-start', // Start at the top
+          alignItems: 'stretch', // Stretch to fill available space
+          overflowY: 'auto', // Handle vertical scrolling
+          overflowX: 'hidden', // Hide horizontal scrolling
+          padding: 2, // Consistent padding for content area
+          backgroundColor: '#f0f2f5' // Optional: background color for content area
         }}
       >
         <Outlet /> {/* This will render the child components like AdminDashboard, AdminMenu, etc. */}

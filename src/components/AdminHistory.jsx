@@ -10,6 +10,12 @@ const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString(undefined, options);
 };
 
+// Utility function to parse and validate date
+const parseDate = (dateString) => {
+    const date = new Date(dateString);
+    return isNaN(date) ? null : date; // Return null if invalid date
+};
+
 // Custom hook for debouncing search input
 const useDebounce = (value, delay) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
@@ -28,34 +34,35 @@ const useDebounce = (value, delay) => {
     return debouncedValue;
 };
 
-const AdminBookings = () => {
-    const [bookings, setBookings] = useState([]);
+const AdminHistory = () => {
+    const [history, setHistory] = useState([]);
     const [searchQuery, setSearchQuery] = useState(''); // State for search query
     const debouncedSearchQuery = useDebounce(searchQuery, 500); // Debounced search query
 
-    // Modal state
+    // State for handling modals
     const [modalOpen, setModalOpen] = useState(false);
-    const [modalAction, setModalAction] = useState(null); // "confirm" or "cancel"
-    const [selectedBooking, setSelectedBooking] = useState(null);
+    const [modalAction, setModalAction] = useState(null); // "undo" or "delete"
+    const [selectedBookingId, setSelectedBookingId] = useState(null);
 
     useEffect(() => {
-        const bookingsRef = ref(realtimeDb, 'bookings/');
-        onValue(bookingsRef, (snapshot) => {
+        // Fetch history data from the database
+        const historyRef = ref(realtimeDb, 'history/');
+        onValue(historyRef, (snapshot) => {
             const data = snapshot.val();
             if (data) {
-                const bookingsArray = Object.keys(data).map((key) => ({
+                const historyArray = Object.keys(data).map((key) => ({
                     id: key,
                     ...data[key],
                 }));
-                setBookings(bookingsArray);
+                setHistory(historyArray);
             }
         });
     }, []);
 
-    // Open modal and set action
-    const openModal = (action, booking) => {
+    // Open confirmation modal
+    const openModal = (action, bookingId) => {
         setModalAction(action);
-        setSelectedBooking(booking);
+        setSelectedBookingId(bookingId);
         setModalOpen(true);
     };
 
@@ -63,65 +70,61 @@ const AdminBookings = () => {
     const closeModal = () => {
         setModalOpen(false);
         setModalAction(null);
-        setSelectedBooking(null);
+        setSelectedBookingId(null);
     };
 
-    // Handle Confirm Action
-    const handleConfirm = () => {
-        const bookingToUpdate = selectedBooking;
+    // Undo: Move booking back to the bookings node
+    const handleUndo = (id) => {
+        const bookingToUndo = history.find((booking) => booking.id === id);
 
-        if (bookingToUpdate) {
-            const historyRef = ref(realtimeDb, `history/${bookingToUpdate.id}`);
-            set(historyRef, {
-                ...bookingToUpdate,
-                status: 'confirmed',
-                movedAt: new Date().toISOString(),
+        if (bookingToUndo) {
+            const bookingsRef = ref(realtimeDb, `bookings/${id}`);
+            set(bookingsRef, {
+                ...bookingToUndo,
+                status: 'pending', // Revert status to original or pending
             })
                 .then(() => {
-                    const bookingRef = ref(realtimeDb, `bookings/${bookingToUpdate.id}`);
-                    return remove(bookingRef);
+                    const historyRef = ref(realtimeDb, `history/${id}`);
+                    return remove(historyRef);
                 })
                 .then(() => {
-                    alert('Booking confirmed and moved to history!');
-                    closeModal();
+                    alert('Booking moved back to bookings!');
                 })
                 .catch((error) => {
-                    console.error('Error confirming booking:', error);
-                    alert('Failed to confirm booking. Please try again.');
-                    closeModal();
-                });
+                    console.error('Error undoing booking:', error);
+                    alert('Failed to undo booking. Please try again.');
+                })
+                .finally(() => closeModal());
         }
     };
 
-    // Handle Cancel Action
-    const handleCancel = () => {
-        const bookingToUpdate = selectedBooking;
+    // Delete: Remove booking from the history node permanently
+    const handleDelete = (id) => {
+        const historyRef = ref(realtimeDb, `history/${id}`);
 
-        if (bookingToUpdate) {
-            const historyRef = ref(realtimeDb, `history/${bookingToUpdate.id}`);
-            set(historyRef, {
-                ...bookingToUpdate,
-                status: 'canceled',
-                movedAt: new Date().toISOString(),
+        // Remove the booking from the history node
+        remove(historyRef)
+            .then(() => {
+                alert('Booking deleted from history!');
             })
-                .then(() => {
-                    const bookingRef = ref(realtimeDb, `bookings/${bookingToUpdate.id}`);
-                    return remove(bookingRef);
-                })
-                .then(() => {
-                    alert('Booking canceled and moved to history!');
-                    closeModal();
-                })
-                .catch((error) => {
-                    console.error('Error canceling booking:', error);
-                    alert('Failed to cancel booking. Please try again.');
-                    closeModal();
-                });
+            .catch((error) => {
+                console.error('Error deleting booking:', error);
+                alert('Failed to delete booking. Please try again.');
+            })
+            .finally(() => closeModal());
+    };
+
+    // Confirm and execute the action
+    const confirmAction = () => {
+        if (modalAction === 'undo') {
+            handleUndo(selectedBookingId);
+        } else if (modalAction === 'delete') {
+            handleDelete(selectedBookingId);
         }
     };
 
-    // Filter and sort bookings based on debounced search query and date
-    const filteredBookings = bookings
+    // Filter and sort history based on debounced search query and date
+    const filteredHistory = history
         .filter((booking) => 
             booking.first_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
             booking.last_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
@@ -131,13 +134,20 @@ const AdminBookings = () => {
             formatDate(booking.date).toLowerCase().includes(debouncedSearchQuery.toLowerCase())
         )
         .sort((a, b) => {
-            return new Date(a.date) - new Date(b.date); // Sort by date in ascending order
+            // Parse the dates for sorting
+            const dateA = parseDate(a.date);
+            const dateB = parseDate(b.date);
+
+            if (!dateA) return 1; // Move invalid dates to bottom
+            if (!dateB) return -1;
+
+            return dateA - dateB; // Sort by date in ascending order
         });
 
     return (
         <Paper elevation={3} sx={{ padding: 3, margin: '20px auto', width: '90%' }}>
             <Typography variant="h4" align="center" gutterBottom>
-                Admin Bookings
+                Booking History
             </Typography>
 
             {/* Search Bar */}
@@ -167,11 +177,12 @@ const AdminBookings = () => {
                             <TableCell sx={{ border: '1px solid #000', fontWeight: 'bold' }}>Package</TableCell>
                             <TableCell sx={{ border: '1px solid #000', fontWeight: 'bold' }}>Date</TableCell>
                             <TableCell sx={{ border: '1px solid #000', fontWeight: 'bold' }}>Time</TableCell>
+                            <TableCell sx={{ border: '1px solid #000', fontWeight: 'bold' }}>Status</TableCell>
                             <TableCell sx={{ border: '1px solid #000', fontWeight: 'bold' }} align="center">Actions</TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
-                        {filteredBookings.map((booking) => (
+                        {filteredHistory.map((booking) => (
                             <TableRow key={booking.id}>
                                 <TableCell sx={{ border: '1px solid #000' }}>{booking.id}</TableCell>
                                 <TableCell sx={{ border: '1px solid #000' }}>{booking.first_name}</TableCell>
@@ -181,11 +192,12 @@ const AdminBookings = () => {
                                 <TableCell sx={{ border: '1px solid #000' }}>{booking.package}</TableCell>
                                 <TableCell sx={{ border: '1px solid #000' }}>{formatDate(booking.date)}</TableCell>
                                 <TableCell sx={{ border: '1px solid #000' }}>{booking.time}</TableCell>
+                                <TableCell sx={{ border: '1px solid #000' }}>{booking.status}</TableCell>
                                 <TableCell sx={{ border: '1px solid #000' }} align="center">
                                     <Box display="flex" justifyContent="center" alignItems="center">
                                         <Button
                                             variant="contained"
-                                            onClick={() => openModal('confirm', booking)}
+                                            onClick={() => openModal('undo', booking.id)}
                                             sx={{
                                                 marginRight: '5px',
                                                 backgroundColor: '#000',
@@ -194,13 +206,12 @@ const AdminBookings = () => {
                                                     backgroundColor: '#333',
                                                 },
                                             }}
-                                            disabled={booking.status === 'confirmed'}
                                         >
-                                            Confirm
+                                            Undo
                                         </Button>
                                         <Button
                                             variant="contained"
-                                            onClick={() => openModal('cancel', booking)}
+                                            onClick={() => openModal('delete', booking.id)}
                                             sx={{
                                                 backgroundColor: '#000',
                                                 color: '#fff',
@@ -208,9 +219,8 @@ const AdminBookings = () => {
                                                     backgroundColor: '#333',
                                                 },
                                             }}
-                                            disabled={booking.status === 'canceled'}
                                         >
-                                            Cancel
+                                            Delete
                                         </Button>
                                     </Box>
                                 </TableCell>
@@ -228,7 +238,7 @@ const AdminBookings = () => {
                 aria-describedby="confirmation-dialog-description"
             >
                 <DialogTitle id="confirmation-dialog-title">
-                    Confirm {modalAction === 'confirm' ? 'Confirm' : 'Cancel'} Action
+                    Confirm {modalAction === 'undo' ? 'Undo' : 'Delete'} Action
                 </DialogTitle>
                 <DialogContent>
                     <Typography>
@@ -247,7 +257,7 @@ const AdminBookings = () => {
                         Cancel
                     </Button>
                     <Button 
-                        onClick={modalAction === 'confirm' ? handleConfirm : handleCancel} 
+                        onClick={confirmAction} 
                         sx={{ 
                             backgroundColor: '#000', 
                             color: '#fff', 
@@ -262,4 +272,4 @@ const AdminBookings = () => {
     );
 };
 
-export default AdminBookings;
+export default AdminHistory;

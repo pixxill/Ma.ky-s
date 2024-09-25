@@ -13,6 +13,13 @@ import {
   InputLabel,
   Typography,
 } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
+
+// Importing Icons for Payment Methods
+import GcashIcon from '../assets/gcash.png';
+import TransferIcon from '../assets/transfer.png';
 
 // Image imports for the packages modal
 import packageImage1 from '../assets/package1.png';
@@ -22,10 +29,14 @@ import packageImage4 from '../assets/package4.png';
 import packageImage5 from '../assets/package5.png';
 
 const Home = () => {
-  const [open, setOpen] = useState(false);
-  const [bookingConfirmationOpen, setBookingConfirmationOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
-  const [packagesOpen, setPackagesOpen] = useState(false); 
+  const [paymentOpen, setPaymentOpen] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+  const [packageSelectionOpen, setPackageSelectionOpen] = useState(false);
+  const [receiptPreview, setReceiptPreview] = useState(null);
+  const [prevState, setPrevState] = useState(''); // Track the previous state
   const [bookingData, setBookingData] = useState({
     first_name: '',
     last_name: '',
@@ -34,49 +45,65 @@ const Home = () => {
     package: '',
     date: '',
     time: '',
+    payment_method: '',
+    receipt: null,
   });
-
-  // State for tracking form errors
-  const [formErrors, setFormErrors] = useState({});
+  const [errors, setErrors] = useState({});
 
   const handleClickOpen = () => {
-    setOpen(true);
+    setPrevState(''); // No previous state
+    setCalendarOpen(true); // Open calendar modal first
   };
 
   const handleClose = () => {
-    setOpen(false);
-    setBookingConfirmationOpen(false);
-    resetBookingForm(); // Reset form data when the dialog is closed
-  };
-
-  const handleConfirmationClose = () => {
+    setCalendarOpen(false);
+    setFormOpen(false);
     setConfirmationOpen(false);
+    setPaymentOpen(false);
+    setSuccessOpen(false);
+    setPackageSelectionOpen(false);
+    setErrors({});
+    clearFormData();
   };
 
-  const handlePackagesOpen = () => {
-    setPackagesOpen(true);
-  };
-
-  const handlePackagesClose = () => {
-    setPackagesOpen(false);
+  const handleBack = () => {
+    switch (prevState) {
+      case 'calendar':
+        setCalendarOpen(true);
+        setFormOpen(false);
+        break;
+      case 'form':
+        setFormOpen(true);
+        setConfirmationOpen(false);
+        break;
+      case 'confirmation':
+        setConfirmationOpen(true);
+        setPaymentOpen(false);
+        break;
+      case 'payment':
+        setPaymentOpen(true);
+        setSuccessOpen(false);
+        break;
+      default:
+        handleClose();
+    }
   };
 
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    // For contact_number field, allow only numbers and restrict length to 11 digits
-    if (name === 'contact_number') {
-      if (/^\d{0,11}$/.test(value)) {
-        setBookingData({ ...bookingData, [name]: value });
-      }
+    const { name, value, files } = e.target;
+
+    if (name === 'contact_number' && !/^\d*$/.test(value)) return;
+
+    if (name === 'receipt') {
+      const file = files[0];
+      setBookingData({ ...bookingData, [name]: file });
+      setReceiptPreview(URL.createObjectURL(file));
     } else {
       setBookingData({ ...bookingData, [name]: value });
     }
-    // Clear the error for this field when it is updated
-    setFormErrors((prev) => ({ ...prev, [name]: '' }));
   };
 
-  // Function to reset the booking form
-  const resetBookingForm = () => {
+  const clearFormData = () => {
     setBookingData({
       first_name: '',
       last_name: '',
@@ -85,52 +112,97 @@ const Home = () => {
       package: '',
       date: '',
       time: '',
+      payment_method: '',
+      receipt: null,
     });
-    setFormErrors({});
+    setErrors({});
+    setReceiptPreview(null);
   };
 
-  // Function to generate a unique 3-digit random ID
-  const generateUniqueId = (existingNumbers) => {
-    let randomId;
-    do {
-      randomId = Math.floor(Math.random() * 1000).toString().padStart(3, '0'); 
-    } while (existingNumbers.includes(parseInt(randomId))); 
-    return `ID_${randomId}`;
+  const handleDateSelection = (date) => {
+    setBookingData({ ...bookingData, date: date.format('YYYY-MM-DD') });
+    setPrevState('calendar');
+    setCalendarOpen(false);
+    setFormOpen(true); // Open the form modal next
   };
 
-  // Function to check for required fields
+  const handlePackageSelectionOpen = () => {
+    setPackageSelectionOpen(true);
+  };
+
+  const handlePackageSelect = (selectedPackage) => {
+    setBookingData({ ...bookingData, package: selectedPackage });
+    setPackageSelectionOpen(false);
+  };
+
   const validateForm = () => {
-    const errors = {};
-    if (!bookingData.first_name.trim()) errors.first_name = 'First Name is required';
-    if (!bookingData.last_name.trim()) errors.last_name = 'Last Name is required';
-    if (!bookingData.contact_number.trim() || bookingData.contact_number.length !== 11) {
-      errors.contact_number = 'Contact Number must be 11 digits';
+    let validationErrors = {};
+    if (!bookingData.first_name.trim()) validationErrors.first_name = "First Name is required.";
+    if (!bookingData.last_name.trim()) validationErrors.last_name = "Last Name is required.";
+    if (!bookingData.contact_number.trim()) {
+      validationErrors.contact_number = "Contact Number is required.";
+    } else if (bookingData.contact_number.length !== 11) {
+      validationErrors.contact_number = "Contact Number must be 11 digits.";
     }
-    if (!bookingData.email_address.trim()) errors.email_address = 'Email Address is required';
-    if (!bookingData.package.trim()) errors.package = 'Package selection is required';
-    if (!bookingData.date.trim()) errors.date = 'Date is required';
-    if (!bookingData.time.trim()) errors.time = 'Time slot is required';
-    return errors;
+    if (!bookingData.email_address.trim()) {
+      validationErrors.email_address = "Email Address is required.";
+    } else if (!/\S+@\S+\.\S+/.test(bookingData.email_address)) {
+      validationErrors.email_address = "Email Address is invalid.";
+    }
+    if (!bookingData.date) validationErrors.date = "Date is required.";
+    if (!bookingData.time) validationErrors.time = "Time Slot is required.";
+    if (!bookingData.package) validationErrors.package = "Package is required.";
+    return validationErrors;
+  };
+
+  const handleFormNext = () => {
+    const formErrors = validateForm();
+    if (Object.keys(formErrors).length === 0) {
+      setPrevState('form');
+      setFormOpen(false);
+      setConfirmationOpen(true);
+    } else {
+      setErrors(formErrors);
+    }
+  };
+
+  const handleConfirmNext = () => {
+    setPrevState('confirmation');
+    setConfirmationOpen(false);
+    setPaymentOpen(true);
+  };
+
+  const handlePaymentSubmit = () => {
+    if (!bookingData.payment_method) {
+      setErrors({ payment_method: 'Payment method is required' });
+      return;
+    }
+    if (!bookingData.receipt) {
+      setErrors({ receipt: 'Receipt upload is required' });
+      return;
+    }
+    setPrevState('payment');
+    setPaymentOpen(false);
+    setSuccessOpen(true); // Open success modal
+    handleBooking(); // Call booking submit logic
   };
 
   const handleBooking = async () => {
-    setBookingConfirmationOpen(false); 
-
     try {
       const response = await fetch('https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings.json');
-      
+
       if (!response.ok) {
         const errorDetails = await response.json();
         alert('Error fetching bookings: ' + errorDetails.message);
         throw new Error('Network response was not ok');
       }
-  
+
       const bookings = await response.json();
       const existingNumbers = bookings ? Object.keys(bookings).map((key) => parseInt(key.replace('ID_', ''))) : [];
-  
+
       // Generate a unique 3-digit ID
       const uniqueId = generateUniqueId(existingNumbers);
-  
+
       const currentDateTime = new Date().toLocaleString('en-US', {
         month: 'long',
         day: '2-digit',
@@ -139,12 +211,12 @@ const Home = () => {
         minute: '2-digit',
         hour12: true,
       });
-  
+
       const newBooking = {
         ...bookingData,
         date_time: currentDateTime,
       };
-  
+
       const postResponse = await fetch(`https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings/${uniqueId}.json`, {
         method: 'PUT',
         headers: {
@@ -152,42 +224,28 @@ const Home = () => {
         },
         body: JSON.stringify(newBooking),
       });
-  
+
       if (!postResponse.ok) {
         const errorDetails = await postResponse.json();
         alert('Error submitting booking: ' + errorDetails.message);
         throw new Error('Network response was not ok');
       }
-  
-      const data = await postResponse.json();
-      console.log('Booking successful:', data);
-      setConfirmationOpen(true);
 
-      // Send confirmation email after successful booking via an API call
-      await fetch('http://localhost:5000/send-email', { // Replace with your backend URL
+      console.log('Booking successful:', newBooking);
+      setSuccessOpen(true);
+
+      await fetch('http://localhost:5000/send-email', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(bookingData),
+        body: JSON.stringify(newBooking),
       });
 
-      // Reset the booking form after successful submission
-      resetBookingForm();
-  
+      clearFormData();
+
     } catch (error) {
       console.error('Error submitting booking:', error);
-    }
-  
-    handleClose();
-  };
-
-  const handleBookingConfirmationOpen = () => {
-    const errors = validateForm();
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-    } else {
-      setBookingConfirmationOpen(true);
     }
   };
 
@@ -213,23 +271,26 @@ const Home = () => {
         >
           Book now!
         </button>
-        <button
-          style={buttonStyle}
-          onMouseOver={(e) => {
-            e.currentTarget.style.backgroundColor = buttonHoverStyle.backgroundColor;
-            e.currentTarget.style.color = buttonHoverStyle.color;
-          }}
-          onMouseOut={(e) => {
-            e.currentTarget.style.backgroundColor = buttonStyle.backgroundColor;
-            e.currentTarget.style.color = buttonStyle.color;
-          }}
-          onClick={handlePackagesOpen}
-        >
-          Packages
-        </button>
       </div>
 
-      <Dialog open={open} onClose={handleClose} PaperProps={{ style: dialogStyle }}>
+      {/* Calendar Modal */}
+      <Dialog open={calendarOpen} onClose={handleClose} PaperProps={{ style: dialogStyle }}>
+        <DialogTitle>
+          <Typography style={titleStyle}>Select Booking Date</Typography>
+        </DialogTitle>
+        <DialogContent>
+          <LocalizationProvider dateAdapter={AdapterDayjs}>
+            <DateCalendar onChange={handleDateSelection} />
+          </LocalizationProvider>
+        </DialogContent>
+        <DialogActions style={dialogActionsStyle}>
+          <Button onClick={handleBack} style={dialogButtonStyle}>Back</Button>
+          <Button onClick={handleClose} style={dialogButtonStyle}>Cancel</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Booking Form Modal */}
+      <Dialog open={formOpen} onClose={handleClose} PaperProps={{ style: dialogStyle }}>
         <DialogTitle>
           <Typography style={titleStyle}>Fill Out Your Details</Typography>
         </DialogTitle>
@@ -244,9 +305,9 @@ const Home = () => {
             name="first_name"
             value={bookingData.first_name}
             onChange={handleInputChange}
+            error={!!errors.first_name}
+            helperText={errors.first_name}
             style={textFieldStyle}
-            error={!!formErrors.first_name}
-            helperText={formErrors.first_name}
           />
           <TextField
             margin="dense"
@@ -257,9 +318,9 @@ const Home = () => {
             name="last_name"
             value={bookingData.last_name}
             onChange={handleInputChange}
+            error={!!errors.last_name}
+            helperText={errors.last_name}
             style={textFieldStyle}
-            error={!!formErrors.last_name}
-            helperText={formErrors.last_name}
           />
           <TextField
             margin="dense"
@@ -270,9 +331,10 @@ const Home = () => {
             name="contact_number"
             value={bookingData.contact_number}
             onChange={handleInputChange}
+            error={!!errors.contact_number}
+            helperText={errors.contact_number}
+            inputProps={{ maxLength: 11 }}
             style={textFieldStyle}
-            error={!!formErrors.contact_number}
-            helperText={formErrors.contact_number}
           />
           <TextField
             margin="dense"
@@ -283,9 +345,9 @@ const Home = () => {
             name="email_address"
             value={bookingData.email_address}
             onChange={handleInputChange}
+            error={!!errors.email_address}
+            helperText={errors.email_address}
             style={textFieldStyle}
-            error={!!formErrors.email_address}
-            helperText={formErrors.email_address}
           />
           <TextField
             margin="dense"
@@ -296,14 +358,15 @@ const Home = () => {
             name="date"
             value={bookingData.date}
             onChange={handleInputChange}
+            error={!!errors.date}
+            helperText={errors.date}
             style={textFieldStyle}
             InputLabelProps={{
               shrink: true,
             }}
-            error={!!formErrors.date}
-            helperText={formErrors.date}
+            disabled
           />
-          <FormControl fullWidth margin="dense" style={textFieldStyle} error={!!formErrors.time}>
+          <FormControl fullWidth margin="dense" error={!!errors.time} style={textFieldStyle}>
             <InputLabel id="time-slot-label">Time Slot</InputLabel>
             <Select
               labelId="time-slot-label"
@@ -317,34 +380,28 @@ const Home = () => {
               <MenuItem value="8:00 AM - 11:00 AM">8:00 AM - 11:00 AM</MenuItem>
               <MenuItem value="1:00 PM - 5:00 PM">1:00 PM - 5:00 PM</MenuItem>
             </Select>
-            {formErrors.time && <Typography color="error">{formErrors.time}</Typography>}
+            {errors.time && <Typography style={{ color: 'red', marginTop: '5px' }}>{errors.time}</Typography>}
           </FormControl>
-          <FormControl fullWidth margin="dense" style={textFieldStyle} error={!!formErrors.package}>
-            <InputLabel id="package-label">Package</InputLabel>
-            <Select
-              labelId="package-label"
-              label="Package"
-              name="package"
-              value={bookingData.package}
-              onChange={handleInputChange}
-              variant="outlined"
-              style={{ backgroundColor: '#EDE8DC', color: '#00000' }}
-            >
-              <MenuItem value="3000Php">3000Php</MenuItem>
-              <MenuItem value="4000Php">4000Php</MenuItem>
-              <MenuItem value="VIP Package">VIP Package</MenuItem>
-            </Select>
-            {formErrors.package && <Typography color="error">{formErrors.package}</Typography>}
-          </FormControl>
+          <Button
+            variant="outlined"
+            style={packageButtonStyle}
+            onClick={handlePackageSelectionOpen}
+          >
+            Select Package
+          </Button>
+          <Typography variant="body1" style={{ marginTop: '10px', color: errors.package ? 'red' : 'black' }}>
+            {errors.package ? errors.package : `Selected Package: ${bookingData.package}`}
+          </Typography>
         </DialogContent>
         <DialogActions style={dialogActionsStyle}>
+          <Button onClick={handleBack} style={dialogButtonStyle}>Back</Button>
           <Button onClick={handleClose} style={dialogButtonStyle}>Cancel</Button>
-          <Button onClick={handleBookingConfirmationOpen} style={dialogButtonStyle}>Next</Button>
+          <Button onClick={handleFormNext} style={dialogButtonStyle}>Next</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Booking Confirmation Dialog */}
-      <Dialog open={bookingConfirmationOpen} onClose={() => setBookingConfirmationOpen(false)} PaperProps={{ style: dialogStyle }}>
+      {/* Booking Confirmation Modal */}
+      <Dialog open={confirmationOpen} onClose={() => setConfirmationOpen(false)} PaperProps={{ style: dialogStyle }}>
         <DialogTitle>
           <Typography style={titleStyle}>Confirm Your Booking</Typography>
         </DialogTitle>
@@ -361,13 +418,85 @@ const Home = () => {
           <Typography variant="body1"><strong>Package:</strong> {bookingData.package}</Typography>
         </DialogContent>
         <DialogActions style={dialogActionsStyle}>
-          <Button onClick={() => setBookingConfirmationOpen(false)} style={dialogButtonStyle}>Back</Button>
-          <Button onClick={handleBooking} style={dialogButtonStyle}>Confirm Booking</Button>
+          <Button onClick={handleBack} style={dialogButtonStyle}>Back</Button>
+          <Button onClick={handleClose} style={dialogButtonStyle}>Cancel</Button>
+          <Button onClick={handleConfirmNext} style={dialogButtonStyle}>Next</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Confirmation Dialog */}
-      <Dialog open={confirmationOpen} onClose={handleConfirmationClose} PaperProps={{ style: dialogStyle }}>
+      {/* Payment Modal */}
+      <Dialog open={paymentOpen} onClose={() => setPaymentOpen(false)} PaperProps={{ style: dialogStyle }}>
+        <DialogTitle>
+          <Typography style={titleStyle}>Payment Details</Typography>
+        </DialogTitle>
+        <DialogContent>
+          <FormControl fullWidth margin="dense" error={!!errors.payment_method} style={textFieldStyle}>
+            <InputLabel id="payment-method-label">Mode of Payment</InputLabel>
+            <Select
+              labelId="payment-method-label"
+              label="Mode of Payment"
+              name="payment_method"
+              value={bookingData.payment_method}
+              onChange={handleInputChange}
+              variant="outlined"
+              style={{ backgroundColor: '#EDE8DC', color: '#00000' }}
+            >
+              <MenuItem value="Gcash">
+                <img src={GcashIcon} alt="Gcash" style={paymentIconStyle} />
+                Gcash
+              </MenuItem>
+              <MenuItem value="Bank Transfer">
+                <img src={TransferIcon} alt="Bank Transfer" style={paymentIconStyle} />
+                Bank Transfer
+              </MenuItem>
+            </Select>
+            {errors.payment_method && <Typography color="error">{errors.payment_method}</Typography>}
+          </FormControl>
+
+          {/* Payment Method Info Note */}
+          {bookingData.payment_method === 'Gcash' && (
+            <Typography variant="body1" style={{ margin: '10px 0', color: '#333' }}>
+              <strong>Gcash Number: </strong>1234-567-890
+            </Typography>
+          )}
+          {bookingData.payment_method === 'Bank Transfer' && (
+            <Typography variant="body1" style={{ margin: '10px 0', color: '#333' }}>
+              <strong>Bank Transfer Number: </strong>0987-654-321
+            </Typography>
+          )}
+
+          <Button
+            variant="contained"
+            component="label"
+            style={{ margin: '20px 0', backgroundColor: '#333', color: '#fff' }}
+            disabled={!bookingData.payment_method} // Disable until payment method is selected
+          >
+            Upload Receipt
+            <input
+              type="file"
+              accept="image/*"
+              name="receipt"
+              onChange={handleInputChange}
+              hidden
+            />
+          </Button>
+          {errors.receipt && <Typography color="error">{errors.receipt}</Typography>}
+          {receiptPreview && (
+            <div style={{ textAlign: 'center', margin: '20px 0' }}>
+              <Typography variant="h6">Receipt Preview:</Typography>
+              <img src={receiptPreview} alt="Receipt Preview" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }} />
+            </div>
+          )}
+        </DialogContent>
+        <DialogActions style={dialogActionsStyle}>
+          <Button onClick={handleBack} style={dialogButtonStyle}>Back</Button>
+          <Button onClick={handleClose} style={dialogButtonStyle}>Cancel</Button>
+          <Button onClick={handlePaymentSubmit} style={dialogButtonStyle}>Submit</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Success Modal */}
+      <Dialog open={successOpen} onClose={handleClose} PaperProps={{ style: dialogStyle }}>
         <DialogTitle>
           <Typography style={titleStyle}>Booking Confirmed!</Typography>
         </DialogTitle>
@@ -375,24 +504,25 @@ const Home = () => {
           <Typography>Your booking has been successfully completed!</Typography>
         </DialogContent>
         <DialogActions style={dialogActionsStyle}>
-          <Button onClick={handleConfirmationClose} style={dialogButtonStyle}>Close</Button>
+          <Button onClick={handleClose} style={dialogButtonStyle}>Close</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Packages Dialog */}
-      <Dialog open={packagesOpen} onClose={handlePackagesClose} PaperProps={{ style: dialogStyle }}>
+      {/* Package Selection Modal */}
+      <Dialog open={packageSelectionOpen} onClose={() => setPackageSelectionOpen(false)} PaperProps={{ style: dialogStyle }}>
         <DialogTitle>
-          <Typography style={titleStyle}>Our Packages</Typography>
+          <Typography style={titleStyle}>Select a Package</Typography>
         </DialogTitle>
         <DialogContent>
-          <img src={packageImage1} alt="Basic Package" style={packageImageStyle} />
-          <img src={packageImage2} alt="Premium Package" style={packageImageStyle} />
-          <img src={packageImage3} alt="VIP Package" style={packageImageStyle} />
-          <img src={packageImage4} alt="Exclusive Package" style={packageImageStyle} />
-          <img src={packageImage5} alt="Luxury Package" style={packageImageStyle} />
+          <img src={packageImage1} alt="Package A" style={packageImageStyle} onClick={() => handlePackageSelect("Package A")} />
+          <img src={packageImage2} alt="Package B" style={packageImageStyle} onClick={() => handlePackageSelect("Package B")} />
+          <img src={packageImage3} alt="Package C" style={packageImageStyle} onClick={() => handlePackageSelect("Package C")} />
+          <img src={packageImage4} alt="Package D" style={packageImageStyle} onClick={() => handlePackageSelect("Package D")} />
+          <img src={packageImage5} alt="Package E" style={packageImageStyle} onClick={() => handlePackageSelect("Package E")} />
         </DialogContent>
         <DialogActions style={dialogActionsStyle}>
-          <Button onClick={handlePackagesClose} style={dialogButtonStyle}>Close</Button>
+          <Button onClick={handleBack} style={dialogButtonStyle}>Back</Button>
+          <Button onClick={() => setPackageSelectionOpen(false)} style={dialogButtonStyle}>Close</Button>
         </DialogActions>
       </Dialog>
     </div>
@@ -541,6 +671,16 @@ const dialogButtonStyle = {
   },
 };
 
+const packageButtonStyle = {
+  marginTop: '10px',
+  background: 'linear-gradient(90deg, #3f2b96, #6a5acd)',
+  color: '#fff',
+  padding: '12px 24px',
+  borderRadius: '15px',
+  fontWeight: 'bold',
+  cursor: 'pointer',
+};
+
 const packageImageStyle = {
   width: '100%',
   height: 'auto',
@@ -548,10 +688,17 @@ const packageImageStyle = {
   marginBottom: '15px',
   boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
   transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+  cursor: 'pointer',
   '&:hover': {
     transform: 'scale(1.05)',
-    boxShadow: '0 8px 16px rgba(0, 0, 0, 0.3)', 
+    boxShadow: '0 8px 16px rgba(0, 0, 0, 0.3)',
   },
+};
+
+const paymentIconStyle = {
+  width: '24px',
+  height: '24px',
+  marginRight: '10px',
 };
 
 export default Home;

@@ -38,10 +38,9 @@ const UploadMenuItem = () => {
   const [menuItems, setMenuItems] = useState({});
   const [open, setOpen] = useState(false);
   const [editItemId, setEditItemId] = useState(null);
-  const [searchQuery, setSearchQuery] = useState(''); // New state for search query
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    // Fetch all menu items from the database on component load
     const fetchMenuItems = async () => {
       try {
         const menuRef = dbReference(db, 'Menu');
@@ -56,7 +55,6 @@ const UploadMenuItem = () => {
         setErrorMessage('Failed to fetch menu items.');
       }
     };
-
     fetchMenuItems();
   }, []);
 
@@ -74,7 +72,6 @@ const UploadMenuItem = () => {
     }
 
     if (!title || !description || !price || (!image && !editItemId)) {
-      // Image check only for new items
       setErrorMessage('Please fill in all fields and select an image.');
       return;
     }
@@ -83,13 +80,11 @@ const UploadMenuItem = () => {
       setIsLoading(true);
       let imageUrl = null;
 
-      // Handle image upload if a new image is selected
       if (image) {
         const imageRef = storageReference(storage, `menuImages/${category}/${image.name}`);
         await uploadBytes(imageRef, image);
         imageUrl = await getDownloadURL(imageRef);
 
-        // Delete old image if editing and a new image is uploaded
         if (editItemId && menuItems[category][editItemId]?.imageUrl) {
           const oldImageRef = storageReference(storage, menuItems[category][editItemId].imageUrl);
           await deleteObject(oldImageRef);
@@ -100,7 +95,7 @@ const UploadMenuItem = () => {
         title,
         description,
         price,
-        imageUrl: imageUrl || menuItems[category][editItemId]?.imageUrl, // Use existing image URL if not updated
+        imageUrl: imageUrl || menuItems[category][editItemId]?.imageUrl,
       };
 
       if (editItemId) {
@@ -111,7 +106,6 @@ const UploadMenuItem = () => {
         await set(newMenuItemRef, menuItemData);
       }
 
-      // Reset form and fetch updated menu items
       resetForm();
       await fetchUpdatedMenuItems();
       alert('Menu item saved successfully!');
@@ -148,18 +142,15 @@ const UploadMenuItem = () => {
 
   const handleDelete = async (category, itemId) => {
     try {
-      // Delete the item from the database
       const itemRef = dbReference(db, `Menu/${category}/${itemId}`);
       await remove(itemRef);
 
-      // Delete the image from storage if it exists
       const imageUrl = menuItems[category][itemId]?.imageUrl;
       if (imageUrl) {
         const imageRef = storageReference(storage, imageUrl);
         await deleteObject(imageRef);
       }
 
-      // Update the local state to reflect the changes
       const updatedMenuItems = { ...menuItems };
       delete updatedMenuItems[category][itemId];
       setMenuItems(updatedMenuItems);
@@ -177,8 +168,8 @@ const UploadMenuItem = () => {
     setDescription(item.description);
     setPrice(item.price);
     setCategory(category);
-    setEditItemId(itemId); // Set the item ID for editing
-    setOpen(true); // Open the modal
+    setEditItemId(itemId);
+    setOpen(true);
   };
 
   const handleOpen = () => setOpen(true);
@@ -187,7 +178,6 @@ const UploadMenuItem = () => {
     setOpen(false);
   };
 
-  // Filter menu items based on search query
   const filteredMenuItems = Object.keys(menuItems).reduce((acc, category) => {
     const filteredItems = Object.entries(menuItems[category])
       .filter(([id, item]) =>
@@ -199,7 +189,7 @@ const UploadMenuItem = () => {
         obj[id] = item;
         return obj;
       }, {});
-    
+
     if (Object.keys(filteredItems).length) {
       acc[category] = filteredItems;
     }
@@ -208,19 +198,22 @@ const UploadMenuItem = () => {
   }, {});
 
   return (
-    <Container maxWidth="md" sx={{ marginTop: '30px' }}>
-      {/* Add Product Button */}
-      <Box display="flex" justifyContent="space-between" mb={2}>
+    <Container maxWidth="md" sx={{ marginTop: '30px', bgcolor: '#f5f5f5', p: 3, borderRadius: 2 }}>
+      <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Button
           variant="contained"
           color="primary"
           startIcon={<AddCircleOutlineIcon />}
           onClick={handleOpen}
-          sx={{ textTransform: 'none', bgcolor: '#000', color: '#fff' }}
+          sx={{ 
+            textTransform: 'none', 
+            bgcolor: '#1a73e8', 
+            color: '#fff', 
+            '&:hover': { bgcolor: '#155cb0' } 
+          }}
         >
           Add Product
         </Button>
-        {/* Search Field */}
         <Box display="flex" alignItems="center">
           <SearchIcon sx={{ color: '#888', mr: 1 }} />
           <TextField
@@ -229,25 +222,13 @@ const UploadMenuItem = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             size="small"
-            sx={{ bgcolor: '#f5f5f5', borderRadius: 1 }}
+            sx={{ bgcolor: '#fff', borderRadius: 1 }}
           />
         </Box>
       </Box>
 
-      {/* Minimalistic Modal for the Form */}
       <Modal open={open} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
-        <Box sx={{ 
-          position: 'absolute', 
-          top: '50%', 
-          left: '50%', 
-          transform: 'translate(-50%, -50%)', 
-          width: 500, 
-          bgcolor: '#000', 
-          color: '#fff',
-          boxShadow: 24, 
-          p: 4, 
-          borderRadius: '8px',
-        }}>
+        <Box sx={modalStyles}>
           <Box display="flex" justifyContent="flex-end">
             <IconButton onClick={handleClose} aria-label="close" sx={{ color: '#fff' }}>
               <CloseIcon />
@@ -276,15 +257,7 @@ const UploadMenuItem = () => {
                   onChange={(e) => setTitle(e.target.value)}
                   fullWidth
                   required
-                  sx={{ 
-                    bgcolor: '#333', 
-                    borderRadius: '4px', 
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': { borderColor: '#fff' },
-                    },
-                    '& .MuiInputLabel-root': { color: '#fff' },
-                    '& .MuiInputBase-input': { color: '#fff' },
-                  }}
+                  sx={textFieldStyles}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -297,15 +270,7 @@ const UploadMenuItem = () => {
                   onChange={(e) => setDescription(e.target.value)}
                   fullWidth
                   required
-                  sx={{ 
-                    bgcolor: '#333', 
-                    borderRadius: '4px', 
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': { borderColor: '#fff' },
-                    },
-                    '& .MuiInputLabel-root': { color: '#fff' },
-                    '& .MuiInputBase-input': { color: '#fff' },
-                  }}
+                  sx={textFieldStyles}
                 />
               </Grid>
               <Grid item xs={12}>
@@ -317,27 +282,14 @@ const UploadMenuItem = () => {
                   onChange={(e) => setPrice(e.target.value)}
                   fullWidth
                   required
-                  sx={{ 
-                    bgcolor: '#333', 
-                    borderRadius: '4px', 
-                    '& .MuiOutlinedInput-root': {
-                      '& fieldset': { borderColor: '#fff' },
-                    },
-                    '& .MuiInputLabel-root': { color: '#fff' },
-                    '& .MuiInputBase-input': { color: '#fff' },
-                  }}
+                  sx={textFieldStyles}
                 />
               </Grid>
               <Grid item xs={12}>
                 <FormControl 
                   variant="outlined" 
                   fullWidth 
-                  sx={{ 
-                    bgcolor: '#333', 
-                    borderRadius: '4px',
-                    '& .MuiInputLabel-root': { color: '#fff' },
-                    '& .MuiSelect-select': { color: '#fff' },
-                  }}
+                  sx={textFieldStyles}
                 >
                   <InputLabel id="category-label">Category</InputLabel>
                   <Select
@@ -359,13 +311,7 @@ const UploadMenuItem = () => {
                   variant="contained" 
                   component="label" 
                   fullWidth 
-                  sx={{ 
-                    bgcolor: '#444', 
-                    color: '#fff', 
-                    borderRadius: '4px', 
-                    py: 1.5,
-                    transition: 'all 0.3s ease',
-                  }}
+                  sx={buttonStyles}
                 >
                   {editItemId ? 'Change Image' : 'Upload Image'}
                   <input
@@ -405,13 +351,7 @@ const UploadMenuItem = () => {
                   variant="contained"
                   fullWidth
                   disabled={isLoading}
-                  sx={{ 
-                    py: 1.5, 
-                    borderRadius: '4px', 
-                    bgcolor: isLoading ? '#555' : '#000',
-                    color: '#fff',
-                    transition: 'all 0.3s ease',
-                  }}
+                  sx={submitButtonStyles(isLoading)}
                 >
                   {isLoading ? (
                     <CircularProgress size={24} color="inherit" />
@@ -425,23 +365,15 @@ const UploadMenuItem = () => {
         </Box>
       </Modal>
 
-      {/* Display Filtered Menu Items by Category */}
       {Object.keys(filteredMenuItems).map((category) => (
         <Box key={category} mb={4}>
-          <Typography variant="h5" gutterBottom sx={{ color: '#3f51b5', fontWeight: 'bold', textTransform: 'capitalize' }}>
+          <Typography variant="h5" gutterBottom sx={categoryTitleStyles}>
             {category}
           </Typography>
           <Grid container spacing={4}>
             {Object.entries(filteredMenuItems[category]).map(([id, item]) => (
               <Grid item xs={12} sm={6} md={4} key={id}>
-                <Card sx={{ 
-                  boxShadow: '0 5px 15px rgba(0,0,0,0.1)', 
-                  border: '1px solid #000', // Stroke around the card
-                  transition: 'transform 0.3s ease',
-                  '&:hover': {
-                    transform: 'scale(1.05)', // Slightly enlarge on hover
-                  }
-                }}>
+                <Card sx={cardStyles}>
                   <CardMedia component="img" alt={item.title} height="140" image={item.imageUrl} />
                   <CardContent>
                     <Typography variant="h6" gutterBottom>{item.title}</Typography>
@@ -451,13 +383,7 @@ const UploadMenuItem = () => {
                       <Tooltip title="Edit">
                         <IconButton 
                           onClick={() => handleEdit(category, id)}
-                          sx={{
-                            bgcolor: '#000',
-                            color: '#fff',
-                            '&:hover': {
-                              bgcolor: '#333',
-                            },
-                          }}
+                          sx={iconButtonStyles}
                         >
                           <EditIcon />
                         </IconButton>
@@ -465,13 +391,7 @@ const UploadMenuItem = () => {
                       <Tooltip title="Delete">
                         <IconButton 
                           onClick={() => handleDelete(category, id)}
-                          sx={{
-                            bgcolor: '#000',
-                            color: '#fff',
-                            '&:hover': {
-                              bgcolor: '#333',
-                            },
-                          }}
+                          sx={iconButtonStyles}
                         >
                           <DeleteIcon />
                         </IconButton>
@@ -486,6 +406,73 @@ const UploadMenuItem = () => {
       ))}
     </Container>
   );
+};
+
+// Styles
+const modalStyles = {
+  position: 'absolute',
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+  width: 500,
+  bgcolor: '#333',
+  color: '#fff',
+  boxShadow: 24,
+  p: 4,
+  borderRadius: '8px',
+};
+
+const textFieldStyles = {
+  bgcolor: '#444',
+  borderRadius: '4px',
+  '& .MuiOutlinedInput-root': {
+    '& fieldset': { borderColor: '#fff' },
+  },
+  '& .MuiInputLabel-root': { color: '#fff' },
+  '& .MuiInputBase-input': { color: '#fff' },
+};
+
+const buttonStyles = {
+  bgcolor: '#555',
+  color: '#fff',
+  borderRadius: '4px',
+  py: 1.5,
+  transition: 'all 0.3s ease',
+  '&:hover': { bgcolor: '#666' },
+};
+
+const submitButtonStyles = (isLoading) => ({
+  py: 1.5,
+  borderRadius: '4px',
+  bgcolor: isLoading ? '#555' : '#1a73e8',
+  color: '#fff',
+  transition: 'all 0.3s ease',
+  '&:hover': { bgcolor: isLoading ? '#555' : '#155cb0' },
+});
+
+const categoryTitleStyles = {
+  color: '#3f51b5',
+  fontWeight: 'bold',
+  textTransform: 'capitalize',
+  borderBottom: '2px solid #3f51b5',
+  pb: 1,
+  mb: 2,
+};
+
+const cardStyles = {
+  boxShadow: '0 5px 15px rgba(0,0,0,0.1)',
+  border: '1px solid #ddd',
+  transition: 'transform 0.3s ease',
+  '&:hover': {
+    transform: 'translateY(-5px)',
+    boxShadow: '0 8px 20px rgba(0,0,0,0.2)',
+  },
+};
+
+const iconButtonStyles = {
+  bgcolor: 'black',
+  color: '#fff',
+  '&:hover': { bgcolor: '#155cb0' },
 };
 
 export default UploadMenuItem;

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { ref, onValue, set, remove } from 'firebase/database';
 import { realtimeDb } from '../Firebase';
-import { Button, Typography, Box, Paper, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, TextField, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { Button, Typography, Box, Paper, Grid, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Card, CardContent } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 
 // Utility function to format date for display purposes
@@ -135,7 +135,7 @@ const AdminBookings = () => {
         });
 
     return (
-        <Paper elevation={3} sx={{ padding: 3, margin: '20px auto', width: '90%' }}>
+        <Paper elevation={3} sx={{ padding: 3, margin: '20px auto', width: '90%', backgroundColor: '#f5f5f5' }}>
             <Typography variant="h4" align="center" gutterBottom>
                 Admin Bookings
             </Typography>
@@ -155,70 +155,56 @@ const AdminBookings = () => {
                 </Box>
             </Box>
 
-            <TableContainer>
-                <Table>
-                    <TableHead>
-                        <TableRow>
-                            <TableCell sx={{ border: '1px solid #000', fontWeight: 'bold' }}>Booking ID</TableCell>
-                            <TableCell sx={{ border: '1px solid #000', fontWeight: 'bold' }}>First Name</TableCell>
-                            <TableCell sx={{ border: '1px solid #000', fontWeight: 'bold' }}>Last Name</TableCell>
-                            <TableCell sx={{ border: '1px solid #000', fontWeight: 'bold' }}>Email</TableCell>
-                            <TableCell sx={{ border: '1px solid #000', fontWeight: 'bold' }}>Contact Number</TableCell>
-                            <TableCell sx={{ border: '1px solid #000', fontWeight: 'bold' }}>Package</TableCell>
-                            <TableCell sx={{ border: '1px solid #000', fontWeight: 'bold' }}>Date</TableCell>
-                            <TableCell sx={{ border: '1px solid #000', fontWeight: 'bold' }}>Time</TableCell>
-                            <TableCell sx={{ border: '1px solid #000', fontWeight: 'bold' }} align="center">Actions</TableCell>
-                        </TableRow>
-                    </TableHead>
-                    <TableBody>
-                        {filteredBookings.map((booking) => (
-                            <TableRow key={booking.id}>
-                                <TableCell sx={{ border: '1px solid #000' }}>{booking.id}</TableCell>
-                                <TableCell sx={{ border: '1px solid #000' }}>{booking.first_name}</TableCell>
-                                <TableCell sx={{ border: '1px solid #000' }}>{booking.last_name}</TableCell>
-                                <TableCell sx={{ border: '1px solid #000' }}>{booking.email_address}</TableCell>
-                                <TableCell sx={{ border: '1px solid #000' }}>{booking.contact_number}</TableCell>
-                                <TableCell sx={{ border: '1px solid #000' }}>{booking.package}</TableCell>
-                                <TableCell sx={{ border: '1px solid #000' }}>{formatDate(booking.date)}</TableCell>
-                                <TableCell sx={{ border: '1px solid #000' }}>{booking.time}</TableCell>
-                                <TableCell sx={{ border: '1px solid #000' }} align="center">
-                                    <Box display="flex" justifyContent="center" alignItems="center">
-                                        <Button
-                                            variant="contained"
-                                            onClick={() => openModal('confirm', booking)}
-                                            sx={{
-                                                marginRight: '5px',
-                                                backgroundColor: '#000',
-                                                color: '#fff',
-                                                '&:hover': {
-                                                    backgroundColor: '#333',
-                                                },
-                                            }}
-                                            disabled={booking.status === 'confirmed'}
-                                        >
-                                            Confirm
-                                        </Button>
-                                        <Button
-                                            variant="contained"
-                                            onClick={() => openModal('cancel', booking)}
-                                            sx={{
-                                                backgroundColor: '#000',
-                                                color: '#fff',
-                                                '&:hover': {
-                                                    backgroundColor: '#333',
-                                                },
-                                            }}
-                                            disabled={booking.status === 'canceled'}
-                                        >
-                                            Cancel
-                                        </Button>
-                                    </Box>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-            </TableContainer>
+            {/* Custom Card Layout for Bookings */}
+            <Grid container spacing={3}>
+                {filteredBookings.map((booking) => (
+                    <Grid item xs={12} sm={6} md={4} key={booking.id}>
+                        <Card sx={styles.bookingCard}>
+                            <CardContent>
+                                <Typography variant="h6" sx={styles.bookingTitle}>
+                                    Booking ID: {booking.id}
+                                </Typography>
+                                <Typography variant="body1" sx={styles.bookingInfo}>
+                                    {booking.first_name} {booking.last_name}
+                                </Typography>
+                                <Typography variant="body2" sx={styles.bookingInfo}>
+                                    Email: {booking.email_address}
+                                </Typography>
+                                <Typography variant="body2" sx={styles.bookingInfo}>
+                                    Contact: {booking.contact_number}
+                                </Typography>
+                                <Typography variant="body2" sx={styles.bookingInfo}>
+                                    Package: {booking.package}
+                                </Typography>
+                                <Typography variant="body2" sx={styles.bookingInfo}>
+                                    Date: {formatDate(booking.date)}
+                                </Typography>
+                                <Typography variant="body2" sx={styles.bookingInfo}>
+                                    Time: {booking.time}
+                                </Typography>
+                                <Box display="flex" justifyContent="center" mt={2}>
+                                    <Button
+                                        variant="contained"
+                                        onClick={() => openModal('confirm', booking)}
+                                        sx={styles.confirmButton}
+                                        disabled={booking.status === 'confirmed'}
+                                    >
+                                        Confirm
+                                    </Button>
+                                    <Button
+                                        variant="contained"
+                                        onClick={() => openModal('cancel', booking)}
+                                        sx={styles.cancelButton}
+                                        disabled={booking.status === 'canceled'}
+                                    >
+                                        Cancel
+                                    </Button>
+                                </Box>
+                            </CardContent>
+                        </Card>
+                    </Grid>
+                ))}
+            </Grid>
 
             {/* Confirmation Modal */}
             <Dialog
@@ -238,21 +224,13 @@ const AdminBookings = () => {
                 <DialogActions>
                     <Button 
                         onClick={closeModal} 
-                        sx={{ 
-                            backgroundColor: '#000', 
-                            color: '#fff', 
-                            '&:hover': { backgroundColor: '#333' } 
-                        }}
+                        sx={styles.dialogButton}
                     >
                         Cancel
                     </Button>
                     <Button 
                         onClick={modalAction === 'confirm' ? handleConfirm : handleCancel} 
-                        sx={{ 
-                            backgroundColor: '#000', 
-                            color: '#fff', 
-                            '&:hover': { backgroundColor: '#333' } 
-                        }}
+                        sx={styles.dialogButton}
                     >
                         Confirm
                     </Button>
@@ -260,6 +238,51 @@ const AdminBookings = () => {
             </Dialog>
         </Paper>
     );
+};
+
+// Styling
+const styles = {
+    bookingCard: {
+        padding: '15px',
+        borderRadius: '12px',
+        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+        backgroundColor: '#ffffff', // Light background color for cards
+        transition: 'transform 0.2s, box-shadow 0.2s',
+        '&:hover': {
+            transform: 'translateY(-5px)',
+            boxShadow: '0 6px 18px rgba(0,0,0,0.15)',
+        },
+    },
+    bookingTitle: {
+        fontWeight: 'bold',
+        color: '#333',
+    },
+    bookingInfo: {
+        marginBottom: '8px',
+        color: '#555',
+    },
+    confirmButton: {
+        marginRight: '10px',
+        backgroundColor: '#4caf50',
+        color: '#fff',
+        '&:hover': {
+            backgroundColor: '#45a047',
+        },
+    },
+    cancelButton: {
+        backgroundColor: '#f44336',
+        color: '#fff',
+        '&:hover': {
+            backgroundColor: '#e53935',
+        },
+    },
+    dialogButton: {
+        backgroundColor: '#000',
+        color: '#fff',
+        '&:hover': {
+            backgroundColor: '#333',
+        },
+    },
 };
 
 export default AdminBookings;

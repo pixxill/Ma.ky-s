@@ -4,11 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Typography, Grid, Card, CardContent, Avatar } from '@mui/material';
 import { ref, onValue } from 'firebase/database';
 import { realtimeDb } from '../../Firebase'; // Adjust based on your file structure
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 
 // Register ChartJS components for the Line chart
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -91,16 +91,61 @@ const AdminDashboard = () => {
         label: 'Completed Bookings',
         data: allMonths.map((_, index) => monthlyData[index] || 0), // Fill data for each month
         borderColor: '#42a5f5',
-        backgroundColor: 'rgba(66, 165, 245, 0.3)',
-        fill: true,
+        backgroundColor: 'rgba(66, 165, 245, 0.2)',
+        pointBackgroundColor: '#ffffff',
+        pointBorderColor: '#42a5f5',
+        pointHoverBackgroundColor: '#42a5f5',
+        pointHoverBorderColor: '#ffffff',
+        fill: 'start',
         lineTension: 0.3, // Smooth curve for the line
       },
     ],
   };
 
+  // Chart options with enhanced appearance
+  const chartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    scales: {
+      x: {
+        grid: {
+          display: false, // Remove vertical grid lines
+        },
+      },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize: 1,
+          color: '#333', // Color of Y-axis labels
+        },
+        grid: {
+          color: 'rgba(0,0,0,0.1)', // Light horizontal grid lines
+        },
+      },
+    },
+    plugins: {
+      legend: {
+        display: true,
+        position: 'top',
+        labels: {
+          color: '#333', // Color of legend labels
+          font: {
+            size: 14,
+          },
+        },
+      },
+      tooltip: {
+        backgroundColor: '#42a5f5', // Tooltip background color
+        titleColor: '#ffffff', // Tooltip title color
+        bodyColor: '#ffffff', // Tooltip body color
+        cornerRadius: 4,
+      },
+    },
+  };
+
   return (
     <Box sx={styles.dashboardContainer}>
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h4" gutterBottom sx={styles.dashboardTitle}>
         Admin Dashboard
       </Typography>
       <Grid container spacing={3}>
@@ -114,10 +159,10 @@ const AdminDashboard = () => {
                 <Avatar sx={{ ...styles.cardIcon, backgroundColor: item.color }}>
                   {item.icon}
                 </Avatar>
-                <Typography variant="h5" sx={{ fontWeight: 'bold' }}>
+                <Typography variant="h5" sx={styles.cardText}>
                   {item.count}
                 </Typography>
-                <Typography variant="body2" color="textSecondary">
+                <Typography variant="body2" sx={styles.cardSubText}>
                   {item.title}
                 </Typography>
               </CardContent>
@@ -127,31 +172,14 @@ const AdminDashboard = () => {
       </Grid>
 
       {/* Line Chart for Completed Bookings */}
-      <Box sx={{ mt: 5, width: '100%', maxWidth: 800 }}> {/* Adjust width and maxWidth as needed */}
-        <Typography variant="h5" gutterBottom>
+      <Box sx={styles.chartContainer}>
+        <Typography variant="h5" gutterBottom sx={{ color: '#333' }}>
           Completed Bookings per Month
         </Typography>
         <Box sx={{ height: 400 }}> {/* Fixed height for the chart container */}
           <Line
             data={chartData}
-            options={{
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                y: {
-                  beginAtZero: true,
-                  ticks: {
-                    stepSize: 1,
-                  },
-                },
-              },
-              plugins: {
-                legend: {
-                  display: true,
-                  position: 'top',
-                },
-              },
-            }}
+            options={chartOptions}
           />
         </Box>
       </Box>
@@ -166,16 +194,21 @@ const styles = {
     alignItems: 'center',
     width: '100%',
     padding: '20px',
-    backgroundColor: '#f8f8f9',
+    backgroundColor: '#f0f4f8', // Light background color
     overflowY: 'auto',
+  },
+  dashboardTitle: {
+    color: '#333', // Darker text color for the title
   },
   dashboardCard: {
     display: 'flex',
+    flexDirection: 'column',
     alignItems: 'center',
-    padding: '15px',
+    justifyContent: 'center', // Center content vertically
+    padding: '30px 20px', // Added padding for better spacing
     borderRadius: '15px',
     boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-    backgroundColor: '#ffffff',
+    backgroundColor: '#ffffff', // Light background color for the cards
     cursor: 'pointer',
     transition: 'transform 0.2s, box-shadow 0.2s',
     '&:hover': {
@@ -188,16 +221,34 @@ const styles = {
     flexDirection: 'column',
     alignItems: 'center',
     textAlign: 'center',
+    color: '#333', // Darker text for better contrast
   },
   cardIcon: {
-    width: '50px',
-    height: '50px',
+    width: '60px', // Increased size for better visibility
+    height: '60px',
     display: 'flex',
     justifyContent: 'center',
     alignItems: 'center',
-    fontSize: '24px',
+    fontSize: '28px', // Increased icon size
     color: '#fff',
-    marginBottom: '10px',
+    marginBottom: '15px', // Added margin for spacing
+  },
+  cardText: {
+    fontWeight: 'bold',
+    color: '#333', // Darker text color
+    fontSize: '24px', // Increased text size for better readability
+  },
+  cardSubText: {
+    color: '#666', // Subtle color for subtext
+  },
+  chartContainer: {
+    mt: 5,
+    width: '100%',
+    maxWidth: 800,
+    padding: '20px',
+    backgroundColor: '#ffffff', // Light background for the chart container
+    borderRadius: '15px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
   },
 };
 

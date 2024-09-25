@@ -28,7 +28,7 @@ const Sidebar = () => {
           Admin Panel
         </Typography>
       </Box>
-      <Divider sx={{ backgroundColor: '#444' }} /> {/* Divider for separation */}
+      <Divider sx={{ backgroundColor: '#bbb' }} /> {/* Divider with lighter color */}
       <List sx={{ mt: 2, flexGrow: 1 }}> {/* flexGrow allows the list to expand and take space */}
         <ListItem button component={Link} to="/admindashboard" sx={styles.listItem}>
           <ListItemIcon sx={styles.icon}><FiHome /></ListItemIcon>
@@ -68,14 +68,14 @@ const Sidebar = () => {
 const styles = {
   sidebar: {
     width: '250px',
-    backgroundColor: '#1a1a1a',
-    color: '#fff',
+    background: 'linear-gradient(135deg, #8e9eab 0%, #eef2f3 100%)', // Soft gradient background
+    color: '#333', // Darker text color for contrast
     height: '100vh',
     padding: '20px',
     display: 'flex',
     flexDirection: 'column',
     justifyContent: 'space-between', // Distribute space between elements
-    borderRight: '1px solid #333',
+    borderRight: '1px solid #ddd',
     boxShadow: '2px 0 5px rgba(0,0,0,0.1)', // Subtle shadow for depth
     transition: 'all 0.3s ease-in-out', // Smooth transition for hover effects
   },
@@ -90,10 +90,10 @@ const styles = {
     height: '50px',
     marginRight: '10px',
     borderRadius: '50%', // Circular logo
-    boxShadow: '0 4px 8px rgba(0,0,0,0.3)', // Shadow for logo
+    boxShadow: '0 4px 8px rgba(0,0,0,0.2)', // Shadow for logo
   },
   logoText: {
-    color: '#fff',
+    color: '#333',
     fontWeight: 'bold',
     fontFamily: 'Roboto, sans-serif', // Updated font for better look
     fontSize: '1.2rem',
@@ -103,7 +103,7 @@ const styles = {
     borderRadius: '8px',
     transition: 'all 0.3s ease',
     '&:hover': {
-      backgroundColor: '#333', // Hover effect
+      backgroundColor: '#f0f0f0', // Light hover effect
       transform: 'scale(1.05)', // Slightly grow on hover
     },
     '& .MuiListItemIcon-root': {
@@ -111,14 +111,14 @@ const styles = {
     },
   },
   icon: {
-    color: '#999', // Subtle icon color
+    color: '#555', // Medium icon color
     minWidth: '40px',
     '&:hover': {
-      color: '#fff', // Change icon color on hover
+      color: '#333', // Darker icon color on hover
     },
   },
   text: {
-    color: '#fff',
+    color: '#333', // Dark text for better visibility
     fontWeight: 'bold',
     fontFamily: 'Roboto, sans-serif',
   },
@@ -128,11 +128,11 @@ const styles = {
     padding: '10px',
   },
   logoutButton: {
-    bgcolor: '#333',
+    bgcolor: 'black', // Soft gradient background color for the button
     color: '#fff',
     width: '100%',
     '&:hover': {
-      bgcolor: '#555', // Darker background on hover
+      bgcolor: '#697079', // Slightly darker on hover
     },
   },
 };

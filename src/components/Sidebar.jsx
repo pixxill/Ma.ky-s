@@ -1,10 +1,25 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { List, ListItem, ListItemText, ListItemIcon, Box, Typography, Divider } from '@mui/material';
+import { Link, useNavigate } from 'react-router-dom';
+import { List, ListItem, ListItemText, ListItemIcon, Box, Typography, Divider, Button } from '@mui/material';
 import { FiBarChart2, FiClipboard, FiPackage, FiHome, FiLayers, FiClock } from 'react-icons/fi';
+import { getAuth, signOut } from 'firebase/auth';
 import logo from '../assets/logo.jpg'; // Update with the actual path to your logo
 
 const Sidebar = () => {
+  const navigate = useNavigate();
+
+  // Function to handle logout
+  const handleLogout = () => {
+    const auth = getAuth();
+    signOut(auth)
+      .then(() => {
+        navigate('/admin'); // Redirect to login page after logout
+      })
+      .catch((error) => {
+        console.error('Error logging out:', error);
+      });
+  };
+
   return (
     <Box sx={styles.sidebar}>
       <Box sx={styles.logoContainer}>
@@ -14,7 +29,7 @@ const Sidebar = () => {
         </Typography>
       </Box>
       <Divider sx={{ backgroundColor: '#444' }} /> {/* Divider for separation */}
-      <List sx={{ mt: 2 }}>
+      <List sx={{ mt: 2, flexGrow: 1 }}> {/* flexGrow allows the list to expand and take space */}
         <ListItem button component={Link} to="/admindashboard" sx={styles.listItem}>
           <ListItemIcon sx={styles.icon}><FiHome /></ListItemIcon>
           <ListItemText primary="Dashboard" sx={styles.text} />
@@ -40,6 +55,11 @@ const Sidebar = () => {
           <ListItemText primary="Packages" sx={styles.text} />
         </ListItem>
       </List>
+      <Box sx={styles.logoutContainer}>
+        <Button variant="contained" sx={styles.logoutButton} onClick={handleLogout}>
+          Logout
+        </Button>
+      </Box>
     </Box>
   );
 };
@@ -54,7 +74,7 @@ const styles = {
     padding: '20px',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'flex-start',
+    justifyContent: 'space-between', // Distribute space between elements
     borderRight: '1px solid #333',
     boxShadow: '2px 0 5px rgba(0,0,0,0.1)', // Subtle shadow for depth
     transition: 'all 0.3s ease-in-out', // Smooth transition for hover effects
@@ -63,7 +83,7 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: '20px',
+    marginBottom: '10px', // Reduced margin for less space
   },
   logo: {
     width: '50px',
@@ -79,7 +99,7 @@ const styles = {
     fontSize: '1.2rem',
   },
   listItem: {
-    marginBottom: '10px',
+    marginBottom: '5px', // Adjusted spacing between items
     borderRadius: '8px',
     transition: 'all 0.3s ease',
     '&:hover': {
@@ -101,6 +121,19 @@ const styles = {
     color: '#fff',
     fontWeight: 'bold',
     fontFamily: 'Roboto, sans-serif',
+  },
+  logoutContainer: {
+    display: 'flex',
+    justifyContent: 'center',
+    padding: '10px',
+  },
+  logoutButton: {
+    bgcolor: '#333',
+    color: '#fff',
+    width: '100%',
+    '&:hover': {
+      bgcolor: '#555', // Darker background on hover
+    },
   },
 };
 

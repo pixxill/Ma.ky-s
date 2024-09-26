@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import backgroundImage from '../assets/background.jpg';
 import {
   Dialog,
@@ -49,6 +49,7 @@ const Home = () => {
     receipt: null,
   });
   const [errors, setErrors] = useState({});
+  const [availableTimeSlots, setAvailableTimeSlots] = useState(['8:00 AM - 11:00 AM', '1:00 PM - 5:00 PM']); // Default time slots
 
   const handleClickOpen = () => {
     setPrevState(''); // No previous state
@@ -119,9 +120,22 @@ const Home = () => {
     setReceiptPreview(null);
   };
 
-  const handleDateSelection = (date) => {
-    setBookingData({ ...bookingData, date: date.format('YYYY-MM-DD') });
-    setPrevState('calendar');
+  const handleDateSelection = async (date) => {
+    const formattedDate = date.format('YYYY-MM-DD');
+    setBookingData({ ...bookingData, date: formattedDate });
+
+    // Check the availability of time slots for the selected date
+    const response = await fetch(`https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings.json`);
+    const bookings = await response.json();
+
+    // Find booked slots for the selected date
+    const bookedSlots = Object.values(bookings || {}).filter(booking => booking.date === formattedDate).map(booking => booking.time);
+
+    // Filter time slots that are available (less than 2 bookings)
+    setAvailableTimeSlots(['8:00 AM - 11:00 AM', '1:00 PM - 5:00 PM'].filter(slot => {
+      return bookedSlots.filter(time => time === slot).length < 2;
+    }));
+
     setCalendarOpen(false);
     setFormOpen(true); // Open the form modal next
   };
@@ -155,12 +169,17 @@ const Home = () => {
     return validationErrors;
   };
 
-  const handleFormNext = () => {
+  const handleFormNext = async () => {
     const formErrors = validateForm();
     if (Object.keys(formErrors).length === 0) {
-      setPrevState('form');
-      setFormOpen(false);
-      setConfirmationOpen(true);
+      const isAvailable = await checkBookingAvailability(bookingData.date, bookingData.time);
+      if (isAvailable) {
+        setPrevState('form');
+        setFormOpen(false);
+        setConfirmationOpen(true);
+      } else {
+        alert("The selected date and time slot is no longer available. Please choose a different time.");
+      }
     } else {
       setErrors(formErrors);
     }
@@ -187,8 +206,28 @@ const Home = () => {
     handleBooking(); // Call booking submit logic
   };
 
+  const checkBookingAvailability = async (date, time) => {
+    const response = await fetch(`https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings.json`);
+    const bookings = await response.json();
+
+    // Filter bookings to find existing bookings for the selected date and time slot
+    const filteredBookings = Object.values(bookings || {}).filter(
+      (booking) => booking.date === date && booking.time === time
+    );
+
+    return filteredBookings.length < 2; // Return true if less than 2 bookings exist
+  };
+
   const handleBooking = async () => {
     try {
+      const isAvailable = await checkBookingAvailability(bookingData.date, bookingData.time);
+      if (!isAvailable) {
+        alert("The selected date and time slot is no longer available. Please choose a different time.");
+        return;
+      }
+
+      console.log('Booking data being sent:', bookingData);
+
       const response = await fetch('https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings.json');
 
       if (!response.ok) {
@@ -200,7 +239,6 @@ const Home = () => {
       const bookings = await response.json();
       const existingNumbers = bookings ? Object.keys(bookings).map((key) => parseInt(key.replace('ID_', ''))) : [];
 
-      // Generate a unique 3-digit ID
       const uniqueId = generateUniqueId(existingNumbers);
 
       const currentDateTime = new Date().toLocaleString('en-US', {
@@ -216,6 +254,9 @@ const Home = () => {
         ...bookingData,
         date_time: currentDateTime,
       };
+
+      console.log('Sending booking to:', `https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings/${uniqueId}.json`);
+      console.log('Booking payload:', newBooking);
 
       const postResponse = await fetch(`https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings/${uniqueId}.json`, {
         method: 'PUT',
@@ -234,19 +275,19 @@ const Home = () => {
       console.log('Booking successful:', newBooking);
       setSuccessOpen(true);
 
-      await fetch('http://localhost:5000/send-email', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(newBooking),
-      });
-
       clearFormData();
 
     } catch (error) {
       console.error('Error submitting booking:', error);
     }
+  };
+
+  const generateUniqueId = (existingNumbers) => {
+    let newId;
+    do {
+      newId = 'ID_' + Math.floor(Math.random() * 900 + 100); // Generate 3-digit unique ID
+    } while (existingNumbers.includes(newId));
+    return newId;
   };
 
   return (
@@ -284,7 +325,6 @@ const Home = () => {
           </LocalizationProvider>
         </DialogContent>
         <DialogActions style={dialogActionsStyle}>
-          <Button onClick={handleBack} style={dialogButtonStyle}>Back</Button>
           <Button onClick={handleClose} style={dialogButtonStyle}>Cancel</Button>
         </DialogActions>
       </Dialog>
@@ -377,8 +417,11 @@ const Home = () => {
               variant="outlined"
               style={{ backgroundColor: '#EDE8DC', color: '#000000' }}
             >
-              <MenuItem value="8:00 AM - 11:00 AM">8:00 AM - 11:00 AM</MenuItem>
-              <MenuItem value="1:00 PM - 5:00 PM">1:00 PM - 5:00 PM</MenuItem>
+              {availableTimeSlots.map(slot => (
+                <MenuItem value={slot} key={slot}>
+                  {slot}
+                </MenuItem>
+              ))}
             </Select>
             {errors.time && <Typography style={{ color: 'red', marginTop: '5px' }}>{errors.time}</Typography>}
           </FormControl>

@@ -98,6 +98,7 @@ const MenuSection = () => {
     height: '420px',
     border: '1px solid rgba(255, 255, 255, 0.1)',
     transition: 'transform 0.3s ease, box-shadow 0.3s ease',
+    cursor: 'pointer',
   };
 
   const imageContainerStyle = {
@@ -117,6 +118,10 @@ const MenuSection = () => {
     objectFit: 'cover',
     borderRadius: '8px',
     transition: 'transform 0.3s ease',
+  };
+
+  const hoverEffectStyle = {
+    transform: 'scale(1.1)',
   };
 
   const titleStyle = {
@@ -187,32 +192,50 @@ const MenuSection = () => {
       <h1 style={mainHeadingStyle}>Explore Our Menu</h1>
 
       <div style={menuSectionStyle}>
-        <h2 style={headingStyle}>Coffee</h2>
+        <h2 style={headingStyle}>DRINKS</h2>
         <Slider {...getSliderSettings(menuItems.coffee.length)}>
           {menuItems.coffee.map((item, index) => (
-            <div key={index} style={menuItemStyle}>
+            <div
+              key={index}
+              style={menuItemStyle}
+              onMouseEnter={(e) => {
+                e.currentTarget.querySelector('img').style.transform = 'scale(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.querySelector('img').style.transform = 'scale(1)';
+              }}
+            >
               <div style={imageContainerStyle}>
                 <img src={item.imageUrl} alt={item.title} style={imageStyle} />
               </div>
               <div style={titleStyle}>{item.title}</div>
               <div style={descriptionStyle}>{item.description}</div>
-              <div style={priceStyle}>{item.price}</div>
+              <div style={priceStyle}>₱{Number(item.price).toLocaleString()}</div>
             </div>
           ))}
         </Slider>
       </div>
 
       <div style={menuSectionStyle}>
-        <h2 style={headingStyle}>Breakfast</h2>
+        <h2 style={headingStyle}>FOODS</h2>
         <Slider {...getSliderSettings(menuItems.breakfast.length)}>
           {menuItems.breakfast.map((item, index) => (
-            <div key={index} style={menuItemStyle}>
+            <div
+              key={index}
+              style={menuItemStyle}
+              onMouseEnter={(e) => {
+                e.currentTarget.querySelector('img').style.transform = 'scale(1.1)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.querySelector('img').style.transform = 'scale(1)';
+              }}
+            >
               <div style={imageContainerStyle}>
                 <img src={item.imageUrl} alt={item.title} style={imageStyle} />
               </div>
               <div style={titleStyle}>{item.title}</div>
               <div style={descriptionStyle}>{item.description}</div>
-              <div style={priceStyle}>{item.price}</div>
+              <div style={priceStyle}>₱{Number(item.price).toLocaleString()}</div>
             </div>
           ))}
         </Slider>

@@ -31,7 +31,7 @@ const UploadMenuItem = () => {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [price, setPrice] = useState('');
-  const [category, setCategory] = useState('Coffee');
+  const [category, setCategory] = useState('Drinks');
   const [image, setImage] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -123,7 +123,7 @@ const UploadMenuItem = () => {
     setDescription('');
     setPrice('');
     setImage(null);
-    setCategory('Coffee');
+    setCategory('Drinks');
     setEditItemId(null);
     setErrorMessage('');
   };
@@ -178,6 +178,18 @@ const UploadMenuItem = () => {
     setOpen(false);
   };
 
+  const formatNumberWithCommas = (number) => {
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  };
+
+  const getDisplayCategoryName = (internalCategory) => {
+    const categoryMapping = {
+      Breakfast: 'Foods',
+      Coffee: 'Drinks',
+    };
+    return categoryMapping[internalCategory] || internalCategory;
+  };
+
   const filteredMenuItems = Object.keys(menuItems).reduce((acc, category) => {
     const filteredItems = Object.entries(menuItems[category])
       .filter(([id, item]) =>
@@ -198,7 +210,7 @@ const UploadMenuItem = () => {
   }, {});
 
   return (
-    <Container maxWidth="md" sx={{ marginTop: '30px', bgcolor: '#f5f5f5', p: 3, borderRadius: 2 }}>
+    <Container maxWidth="md" sx={{ marginTop: '30px', bgcolor: '#ffffff', p: 3, borderRadius: 2 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
         <Button
           variant="contained"
@@ -207,9 +219,9 @@ const UploadMenuItem = () => {
           onClick={handleOpen}
           sx={{ 
             textTransform: 'none', 
-            bgcolor: '#1a73e8', 
+            bgcolor: '#000000', 
             color: '#fff', 
-            '&:hover': { bgcolor: '#155cb0' } 
+            '&:hover': { bgcolor: '#333' } 
           }}
         >
           Add Product
@@ -230,7 +242,7 @@ const UploadMenuItem = () => {
       <Modal open={open} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
         <Box sx={modalStyles}>
           <Box display="flex" justifyContent="flex-end">
-            <IconButton onClick={handleClose} aria-label="close" sx={{ color: '#fff' }}>
+            <IconButton onClick={handleClose} aria-label="close" sx={{ color: '#000' }}>
               <CloseIcon />
             </IconButton>
           </Box>
@@ -239,7 +251,7 @@ const UploadMenuItem = () => {
             align="center" 
             gutterBottom 
             sx={{ 
-              color: '#fff', 
+              color: '#000', 
               fontFamily: 'Roboto, sans-serif', 
               mb: 2,
               fontWeight: 'bold'
@@ -300,9 +312,8 @@ const UploadMenuItem = () => {
                     label="Category"
                     required
                   >
-                    <MenuItem value="Coffee">Coffee</MenuItem>
-                    <MenuItem value="Breakfast">Breakfast</MenuItem>
-                    <MenuItem value="Baked Cookies">Baked Cookies</MenuItem>
+                    <MenuItem value="Drinks">DRINKS</MenuItem>
+                    <MenuItem value="Foods">FOODS</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -311,7 +322,14 @@ const UploadMenuItem = () => {
                   variant="contained" 
                   component="label" 
                   fullWidth 
-                  sx={buttonStyles}
+                  sx={{
+                    bgcolor: '#000000',
+                    color: '#fff',
+                    borderRadius: '4px',
+                    py: 1.5,
+                    transition: 'all 0.3s ease',
+                    '&:hover': { bgcolor: '#333' },
+                  }}
                 >
                   {editItemId ? 'Change Image' : 'Upload Image'}
                   <input
@@ -326,7 +344,7 @@ const UploadMenuItem = () => {
                 <Typography
                   variant="body2"
                   color="textSecondary"
-                  sx={{ mt: 1, color: '#bbb' }}
+                  sx={{ mt: 1, color: '#666' }}
                 >
                   Selected Image: {image.name}
                 </Typography>
@@ -336,7 +354,7 @@ const UploadMenuItem = () => {
                   <Typography 
                     variant="body2" 
                     sx={{ 
-                      color: '#ff5252', 
+                      color: '#d32f2f', 
                       fontWeight: 'bold',
                       mt: 1
                     }}
@@ -351,7 +369,14 @@ const UploadMenuItem = () => {
                   variant="contained"
                   fullWidth
                   disabled={isLoading}
-                  sx={submitButtonStyles(isLoading)}
+                  sx={{
+                    py: 1.5,
+                    borderRadius: '4px',
+                    bgcolor: isLoading ? '#ccc' : '#000000',
+                    color: '#fff',
+                    transition: 'all 0.3s ease',
+                    '&:hover': { bgcolor: isLoading ? '#ccc' : '#333' },
+                  }}
                 >
                   {isLoading ? (
                     <CircularProgress size={24} color="inherit" />
@@ -368,7 +393,7 @@ const UploadMenuItem = () => {
       {Object.keys(filteredMenuItems).map((category) => (
         <Box key={category} mb={4}>
           <Typography variant="h5" gutterBottom sx={categoryTitleStyles}>
-            {category}
+            {getDisplayCategoryName(category)}
           </Typography>
           <Grid container spacing={4}>
             {Object.entries(filteredMenuItems[category]).map(([id, item]) => (
@@ -378,22 +403,42 @@ const UploadMenuItem = () => {
                   <CardContent>
                     <Typography variant="h6" gutterBottom>{item.title}</Typography>
                     <Typography variant="body2" color="textSecondary">{item.description}</Typography>
-                    <Typography variant="h6" sx={{ mt: 1 }}>${item.price}</Typography>
+                    <Typography variant="h6" sx={{ mt: 1 }}>
+                      ₱{formatNumberWithCommas(item.price)}
+                    </Typography>
                     <Box mt={2} display="flex" justifyContent="space-between">
                       <Tooltip title="Edit">
                         <IconButton 
                           onClick={() => handleEdit(category, id)}
-                          sx={iconButtonStyles}
+                          sx={{
+                            backgroundColor: '#f5f5f5',
+                            borderRadius: '50%',
+                            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                            transition: 'transform 0.3s ease',
+                            '&:hover': {
+                              backgroundColor: '#e0e0e0',
+                              transform: 'scale(1.1)',
+                            },
+                          }}
                         >
-                          <EditIcon />
+                          <EditIcon sx={{ color: '#000' }} />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Delete">
                         <IconButton 
                           onClick={() => handleDelete(category, id)}
-                          sx={iconButtonStyles}
+                          sx={{
+                            backgroundColor: '#f5f5f5',
+                            borderRadius: '50%',
+                            boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+                            transition: 'transform 0.3s ease',
+                            '&:hover': {
+                              backgroundColor: '#e0e0e0',
+                              transform: 'scale(1.1)',
+                            },
+                          }}
                         >
-                          <DeleteIcon />
+                          <DeleteIcon sx={{ color: '#d32f2f' }} />
                         </IconButton>
                       </Tooltip>
                     </Box>
@@ -415,46 +460,28 @@ const modalStyles = {
   left: '50%',
   transform: 'translate(-50%, -50%)',
   width: 500,
-  bgcolor: '#333',
-  color: '#fff',
+  bgcolor: '#ffffff',
+  color: '#000',
   boxShadow: 24,
   p: 4,
   borderRadius: '8px',
 };
 
 const textFieldStyles = {
-  bgcolor: '#444',
+  bgcolor: '#f9f9f9',
   borderRadius: '4px',
   '& .MuiOutlinedInput-root': {
-    '& fieldset': { borderColor: '#fff' },
+    '& fieldset': { borderColor: '#ccc' },
   },
-  '& .MuiInputLabel-root': { color: '#fff' },
-  '& .MuiInputBase-input': { color: '#fff' },
+  '& .MuiInputLabel-root': { color: '#000' },
+  '& .MuiInputBase-input': { color: '#000' },
 };
-
-const buttonStyles = {
-  bgcolor: '#555',
-  color: '#fff',
-  borderRadius: '4px',
-  py: 1.5,
-  transition: 'all 0.3s ease',
-  '&:hover': { bgcolor: '#666' },
-};
-
-const submitButtonStyles = (isLoading) => ({
-  py: 1.5,
-  borderRadius: '4px',
-  bgcolor: isLoading ? '#555' : '#1a73e8',
-  color: '#fff',
-  transition: 'all 0.3s ease',
-  '&:hover': { bgcolor: isLoading ? '#555' : '#155cb0' },
-});
 
 const categoryTitleStyles = {
-  color: '#3f51b5',
+  color: '#000',
   fontWeight: 'bold',
   textTransform: 'capitalize',
-  borderBottom: '2px solid #3f51b5',
+  borderBottom: '2px solid #000',
   pb: 1,
   mb: 2,
 };
@@ -467,12 +494,6 @@ const cardStyles = {
     transform: 'translateY(-5px)',
     boxShadow: '0 8px 20px rgba(0,0,0,0.2)',
   },
-};
-
-const iconButtonStyles = {
-  bgcolor: 'black',
-  color: '#fff',
-  '&:hover': { bgcolor: '#155cb0' },
 };
 
 export default UploadMenuItem;

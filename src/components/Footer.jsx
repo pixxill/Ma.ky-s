@@ -1,5 +1,7 @@
 import React from 'react';
 import { Box, Typography, Link } from '@mui/material';
+import gcashLogo from '../assets/gcash1.png'; // Replace with your path to GCash logo
+import paymayaLogo from '../assets/paymaya.png'; // Replace with your path to PayMaya logo
 
 const Footer = () => {
   return (
@@ -11,7 +13,8 @@ const Footer = () => {
         padding: '40px 20px',
         display: 'flex',
         flexWrap: 'wrap',
-        justifyContent: 'space-between',
+        justifyContent: 'center', // Center the content horizontally
+        alignItems: 'center',     // Center the content vertically
       }}
     >
       {/* About Section */}
@@ -23,7 +26,7 @@ const Footer = () => {
           We are many variations of passages available but the majority have suffered alteration in some form by injected humour words which don’t look even slightly believable.
         </Typography>
         <Typography variant="body2" sx={{ margin: '10px 0' }}>
-          091222222 
+          091222222
         </Typography>
         <Typography variant="body2" sx={{ margin: '10px 0' }}>
           CatmonFlores Bai!
@@ -36,7 +39,7 @@ const Footer = () => {
       </Box>
 
       {/* Opening Hours Section */}
-      <Box sx={{ flex: '1 1 50px', margin: '20px' }}>
+      <Box sx={{ flex: '1 1 300px', margin: '10px', textAlign: 'center' }}>
         <Typography variant="h6" sx={{ borderBottom: '2px solid #715c47', display: 'inline-block', paddingBottom: '10px' }}>
           Opening Hours
         </Typography>
@@ -61,6 +64,21 @@ const Footer = () => {
         <Typography variant="body2" sx={{ margin: '10px 0' }}>
           Sunday: 12PM - 09PM
         </Typography>
+      </Box>
+
+      {/* Payment Options Section */}
+      <Box sx={{ flex: '1 1 300px', margin: '10px', textAlign: 'center' }}>
+        <Typography variant="h6" sx={{ borderBottom: '2px solid #715c47', display: 'inline-block', paddingBottom: '10px' }}>
+          Payment Options
+        </Typography>
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', marginTop: '20px' }}>
+          <Box sx={{ margin: '0 10px' }}>
+            <img src={gcashLogo} alt="GCash" style={{ width: '60px', height: 'auto' }} />
+          </Box>
+          <Box sx={{ margin: '0 10px' }}>
+            <img src={paymayaLogo} alt="PayMaya" style={{ width: '60px', height: 'auto' }} />
+          </Box>
+        </Box>
       </Box>
     </Box>
   );

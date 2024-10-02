@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ref, onValue, set, remove } from 'firebase/database';
 import { realtimeDb } from '../Firebase';
-import { Button, Typography, Box, Paper, Grid, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Card, CardContent } from '@mui/material';
+import { Button, Typography, Box, Paper, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import DeleteIcon from '@mui/icons-material/Delete';
+import UndoIcon from '@mui/icons-material/Undo';
 
 // Utility function to format date for display purposes
 const formatDate = (dateString) => {
@@ -25,7 +27,6 @@ const useDebounce = (value, delay) => {
             setDebouncedValue(value);
         }, delay);
 
-        // Cleanup the timeout if the value changes or component unmounts
         return () => {
             clearTimeout(handler);
         };
@@ -38,11 +39,16 @@ const AdminHistory = () => {
     const [history, setHistory] = useState([]);
     const [searchQuery, setSearchQuery] = useState(''); // State for search query
     const debouncedSearchQuery = useDebounce(searchQuery, 500); // Debounced search query
+    const [filterStatus, setFilterStatus] = useState(''); // State for filtering by status
 
     // State for handling modals
     const [modalOpen, setModalOpen] = useState(false);
     const [modalAction, setModalAction] = useState(null); // "undo" or "delete"
     const [selectedBookingId, setSelectedBookingId] = useState(null);
+
+    // Image preview state for receipt_url
+    const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+    const [imageUrl, setImageUrl] = useState('');
 
     useEffect(() => {
         // Fetch history data from the database
@@ -71,6 +77,18 @@ const AdminHistory = () => {
         setModalOpen(false);
         setModalAction(null);
         setSelectedBookingId(null);
+    };
+
+    // Open image preview modal for receipt_url
+    const openImagePreview = (url) => {
+        setImageUrl(url);
+        setImagePreviewOpen(true);
+    };
+
+    // Close image preview modal
+    const closeImagePreview = () => {
+        setImagePreviewOpen(false);
+        setImageUrl('');
     };
 
     // Undo: Move booking back to the bookings node
@@ -123,15 +141,18 @@ const AdminHistory = () => {
         }
     };
 
-    // Filter and sort history based on debounced search query and date
+    // Filter and sort history based on debounced search query, filter status, and date
     const filteredHistory = history
-        .filter((booking) => 
-            booking.first_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-            booking.last_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-            booking.email_address.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-            booking.contact_number.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-            booking.package.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-            formatDate(booking.date).toLowerCase().includes(debouncedSearchQuery.toLowerCase())
+        .filter((booking) =>
+            (filterStatus === '' || booking.status === filterStatus) &&
+            (
+                booking.first_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                booking.last_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                booking.email_address.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                booking.contact_number.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                booking.package.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                formatDate(booking.date).toLowerCase().includes(debouncedSearchQuery.toLowerCase())
+            )
         )
         .sort((a, b) => {
             // Parse the dates for sorting
@@ -150,8 +171,8 @@ const AdminHistory = () => {
                 Booking History
             </Typography>
 
-            {/* Search Bar */}
-            <Box display="flex" justifyContent="flex-end" mb={2}>
+            {/* Search Bar and Filter Buttons */}
+            <Box display="flex" justifyContent="space-between" mb={2}>
                 <Box display="flex" alignItems="center" width="300px">
                     <SearchIcon sx={{ color: '#888', mr: 1 }} />
                     <TextField
@@ -163,59 +184,79 @@ const AdminHistory = () => {
                         size="small"
                     />
                 </Box>
+
+                {/* Filter Buttons for Confirmed and Canceled */}
+                <Box display="flex" alignItems="center">
+                    <Button
+                        variant={filterStatus === 'confirmed' ? 'contained' : 'outlined'}
+                        color="primary"
+                        onClick={() => setFilterStatus(filterStatus === 'confirmed' ? '' : 'confirmed')}
+                        sx={{ marginRight: 1 }}
+                    >
+                        Confirmed
+                    </Button>
+                    <Button
+                        variant={filterStatus === 'canceled' ? 'contained' : 'outlined'}
+                        color="secondary"
+                        onClick={() => setFilterStatus(filterStatus === 'canceled' ? '' : 'canceled')}
+                    >
+                        Canceled
+                    </Button>
+                </Box>
             </Box>
 
-            {/* Custom Card Layout for History */}
-            <Grid container spacing={3}>
-                {filteredHistory.map((booking) => (
-                    <Grid item xs={12} sm={6} md={4} key={booking.id}>
-                        <Card sx={styles.bookingCard}>
-                            <CardContent>
-                                <Typography variant="h6" sx={styles.bookingTitle}>
-                                    Booking ID: {booking.id}
-                                </Typography>
-                                <Typography variant="body1" sx={styles.bookingInfo}>
-                                    {booking.first_name} {booking.last_name}
-                                </Typography>
-                                <Typography variant="body2" sx={styles.bookingInfo}>
-                                    Email: {booking.email_address}
-                                </Typography>
-                                <Typography variant="body2" sx={styles.bookingInfo}>
-                                    Contact: {booking.contact_number}
-                                </Typography>
-                                <Typography variant="body2" sx={styles.bookingInfo}>
-                                    Package: {booking.package}
-                                </Typography>
-                                <Typography variant="body2" sx={styles.bookingInfo}>
-                                    Date: {formatDate(booking.date)}
-                                </Typography>
-                                <Typography variant="body2" sx={styles.bookingInfo}>
-                                    Time: {booking.time}
-                                </Typography>
-                                <Typography variant="body2" sx={styles.bookingInfo}>
-                                    Status: {booking.status}
-                                </Typography>
-                                <Box display="flex" justifyContent="center" mt={2}>
-                                    <Button
-                                        variant="contained"
-                                        onClick={() => openModal('undo', booking.id)}
-                                        sx={styles.undoButton}
-                                    >
-                                        Undo
-                                    </Button>
-                                    <Button
-                                        variant="contained"
-                                        onClick={() => openModal('delete', booking.id)}
-                                        sx={styles.deleteButton}
-                                    >
-                                        Delete
-                                    </Button>
-                                </Box>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                ))}
-            </Grid>
+            {/* Table Layout for History */}
+            <TableContainer component={Paper}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Booking ID</TableCell>
+                            <TableCell>Name</TableCell>
+                            <TableCell>Email</TableCell>
+                            <TableCell>Contact</TableCell>
+                            <TableCell>Package</TableCell>
+                            <TableCell>Date</TableCell>
+                            <TableCell>Status</TableCell>
+                            <TableCell>Proof of Payment</TableCell>
+                            <TableCell>Actions</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {filteredHistory.map((booking) => (
+                            <TableRow key={booking.id}>
+                                <TableCell>{booking.id}</TableCell>
+                                <TableCell>{booking.first_name} {booking.last_name}</TableCell>
+                                <TableCell>{booking.email_address}</TableCell>
+                                <TableCell>{booking.contact_number}</TableCell>
+                                <TableCell>{booking.package}</TableCell>
+                                <TableCell>{formatDate(booking.date)}</TableCell>
+                                <TableCell>{booking.status}</TableCell>
+                                <TableCell>
+                                    {booking.receipt_url ? (
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={() => openImagePreview(booking.receipt_url)}
+                                        >
+                                            Proof of Payment
+                                        </Button>
+                                    ) : (
+                                        'No Receipt'
+                                    )}
+                                </TableCell>
+                                <TableCell>
+                                    <IconButton onClick={() => openModal('undo', booking.id)}>
+                                        <UndoIcon color="primary" />
+                                    </IconButton>
+                                    <IconButton onClick={() => openModal('delete', booking.id)}>
+                                        <DeleteIcon color="error" />
+                                    </IconButton>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
 
             {/* Confirmation Modal */}
             <Dialog
@@ -233,67 +274,39 @@ const AdminHistory = () => {
                     </Typography>
                 </DialogContent>
                 <DialogActions>
-                    <Button 
-                        onClick={closeModal} 
-                        sx={styles.dialogButton}
-                    >
+                    <Button onClick={closeModal}>
                         Cancel
                     </Button>
-                    <Button 
-                        onClick={confirmAction} 
-                        sx={styles.dialogButton}
-                    >
+                    <Button onClick={confirmAction}>
                         Confirm
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Image Preview Modal */}
+            <Dialog
+                open={imagePreviewOpen}
+                onClose={closeImagePreview}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>Proof of Payment</DialogTitle>
+                <DialogContent>
+                    <Box
+                        component="img"
+                        src={imageUrl}
+                        alt="Proof of Payment"
+                        sx={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={closeImagePreview}>
+                        Close
                     </Button>
                 </DialogActions>
             </Dialog>
         </Paper>
     );
-};
-
-// Styling
-const styles = {
-    bookingCard: {
-        padding: '15px',
-        borderRadius: '12px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-        backgroundColor: '#ffffff', // Light background color for cards
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        '&:hover': {
-            transform: 'translateY(-5px)',
-            boxShadow: '0 6px 18px rgba(0,0,0,0.15)',
-        },
-    },
-    bookingTitle: {
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    bookingInfo: {
-        marginBottom: '8px',
-        color: '#555',
-    },
-    undoButton: {
-        marginRight: '10px',
-        backgroundColor: '#4caf50',
-        color: '#fff',
-        '&:hover': {
-            backgroundColor: '#45a047',
-        },
-    },
-    deleteButton: {
-        backgroundColor: '#f44336',
-        color: '#fff',
-        '&:hover': {
-            backgroundColor: '#e53935',
-        },
-    },
-    dialogButton: {
-        backgroundColor: '#000',
-        color: '#fff',
-        '&:hover': {
-            backgroundColor: '#333',
-        },
-    },
 };
 
 export default AdminHistory;

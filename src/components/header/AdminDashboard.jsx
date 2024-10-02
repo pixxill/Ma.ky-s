@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { FiBarChart2, FiClipboard, FiPackage, FiClock } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
-import { Box, Typography, Grid, Card, CardContent, Avatar } from '@mui/material';
-import { ref, onValue } from 'firebase/database';
-import { realtimeDb } from '../../Firebase'; // Adjust based on your file structure
-import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler } from 'chart.js';
+import { Box, Typography, Grid, Card, CardContent, Avatar, Snackbar, Alert, Badge, IconButton, Menu, MenuItem, Tooltip } from '@mui/material';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import { ref, onValue, onChildAdded } from 'firebase/database';
+import { realtimeDb } from '../../Firebase';
+import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip as ChartTooltip, Legend, Filler } from 'chart.js';
 import { Line } from 'react-chartjs-2';
 
 // Register ChartJS components for the Line chart
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, ChartTooltip, Legend, Filler);
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -16,6 +17,13 @@ const AdminDashboard = () => {
   const [menuItemCount, setMenuItemCount] = useState(0);
   const [historyCount, setHistoryCount] = useState(0);
   const [monthlyData, setMonthlyData] = useState({});
+  const [newBookings, setNewBookings] = useState([]); // Track multiple new bookings
+  const [showNotification, setShowNotification] = useState(false); // Control notification visibility
+  const [notificationBell, setNotificationBell] = useState(false); // Control bell color/animation
+
+  // State to handle notification menu (dropdown)
+  const [anchorEl, setAnchorEl] = useState(null);
+  const isMenuOpen = Boolean(anchorEl);
 
   // All months for the x-axis of the line chart
   const allMonths = [
@@ -24,12 +32,24 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     const bookingsRef = ref(realtimeDb, 'bookings/');
+
+    // Fetch initial bookings count
     const unsubscribeBookings = onValue(bookingsRef, (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.val();
         setBookingCount(Object.keys(data).length);
       } else {
         setBookingCount(0);
+      }
+    });
+
+    // Listen for newly added bookings
+    const unsubscribeNewBooking = onChildAdded(bookingsRef, (snapshot) => {
+      if (snapshot.exists()) {
+        const newBookingData = snapshot.val();
+        setNewBookings((prev) => [...prev, newBookingData]); // Add new booking to the list
+        setShowNotification(true); // Show snackbar notification
+        setNotificationBell(true); // Change bell color or animate
       }
     });
 
@@ -66,15 +86,35 @@ const AdminDashboard = () => {
       }
     });
 
+    // Cleanup listeners when the component unmounts
     return () => {
       unsubscribeBookings();
       unsubscribeMenu();
       unsubscribeHistory();
+      unsubscribeNewBooking();
     };
   }, []);
 
   const handleCardClick = (route) => {
     navigate(route);
+  };
+
+  const handleCloseNotification = () => {
+    setShowNotification(false); // Close notification after user dismisses it
+  };
+
+  const handleBellClick = (event) => {
+    setAnchorEl(event.currentTarget); // Open the notification menu
+    setNotificationBell(false); // Reset the bell animation/color
+  };
+
+  const handleCloseMenu = () => {
+    setAnchorEl(null); // Close the menu
+  };
+
+  const markAllAsRead = () => {
+    setNewBookings([]); // Clear all new bookings
+    handleCloseMenu(); // Close the menu
   };
 
   const dashboardData = [
@@ -145,9 +185,42 @@ const AdminDashboard = () => {
 
   return (
     <Box sx={styles.dashboardContainer}>
-      <Typography variant="h4" gutterBottom sx={styles.dashboardTitle}>
-        Admin Dashboard
-      </Typography>
+      <Box sx={styles.header}>
+        <Typography variant="h4" gutterBottom sx={styles.dashboardTitle}>
+          Admin Dashboard
+        </Typography>
+        {/* Notification Bell Icon */}
+        <Tooltip title="Notifications">
+          <IconButton onClick={handleBellClick} sx={{ color: notificationBell ? '#ff9800' : '#555' }}> {/* Change color when new booking */}
+            <Badge badgeContent={newBookings.length} color="error">
+              <NotificationsIcon fontSize="large" />
+            </Badge>
+          </IconButton>
+        </Tooltip>
+      </Box>
+
+      {/* Notification Menu */}
+      <Menu
+        anchorEl={anchorEl}
+        open={isMenuOpen}
+        onClose={handleCloseMenu}
+      >
+        {newBookings.length > 0 ? (
+          <>
+            {newBookings.map((booking, index) => (
+              <MenuItem key={index} onClick={handleCloseMenu}>
+                New booking: {booking.first_name} {booking.last_name}
+              </MenuItem>
+            ))}
+            <MenuItem onClick={markAllAsRead} style={{ color: '#1976d2', fontWeight: 'bold' }}>
+              Mark all as read
+            </MenuItem>
+          </>
+        ) : (
+          <MenuItem>No new notifications</MenuItem>
+        )}
+      </Menu>
+
       <Grid container spacing={3}>
         {dashboardData.map((item, index) => (
           <Grid item xs={12} sm={6} md={4} key={index}>
@@ -183,6 +256,17 @@ const AdminDashboard = () => {
           />
         </Box>
       </Box>
+
+      {/* Notification Snackbar */}
+      <Snackbar
+        open={showNotification}
+        autoHideDuration={6000} // Automatically close after 6 seconds
+        onClose={handleCloseNotification}
+      >
+        <Alert onClose={handleCloseNotification} severity="info" sx={{ width: '100%' }}>
+          New booking has been added!
+        </Alert>
+      </Snackbar>
     </Box>
   );
 };
@@ -196,6 +280,12 @@ const styles = {
     padding: '20px',
     backgroundColor: '#f0f4f8', // Light background color
     overflowY: 'auto',
+  },
+  header: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    width: '100%',
+    alignItems: 'center',
   },
   dashboardTitle: {
     color: '#333', // Darker text color for the title

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { ref, onValue, set, remove } from 'firebase/database';
 import { realtimeDb } from '../Firebase';
-import { Button, Typography, Box, Paper, Grid, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Card, CardContent } from '@mui/material';
+import { Button, Typography, Box, Paper, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Link } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 
 // Utility function to format date for display purposes
 const formatDate = (dateString) => {
@@ -19,7 +21,6 @@ const useDebounce = (value, delay) => {
             setDebouncedValue(value);
         }, delay);
 
-        // Cleanup the timeout if the value changes or component unmounts
         return () => {
             clearTimeout(handler);
         };
@@ -30,13 +31,17 @@ const useDebounce = (value, delay) => {
 
 const AdminBookings = () => {
     const [bookings, setBookings] = useState([]);
-    const [searchQuery, setSearchQuery] = useState(''); // State for search query
-    const debouncedSearchQuery = useDebounce(searchQuery, 500); // Debounced search query
+    const [searchQuery, setSearchQuery] = useState('');
+    const debouncedSearchQuery = useDebounce(searchQuery, 500);
 
-    // Modal state
+    // Modal state for confirmations (Confirm/Cancel actions)
     const [modalOpen, setModalOpen] = useState(false);
-    const [modalAction, setModalAction] = useState(null); // "confirm" or "cancel"
+    const [modalAction, setModalAction] = useState(null);
     const [selectedBooking, setSelectedBooking] = useState(null);
+
+    // Image preview state for receipt_url
+    const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
+    const [imageUrl, setImageUrl] = useState('');
 
     useEffect(() => {
         const bookingsRef = ref(realtimeDb, 'bookings/');
@@ -52,18 +57,30 @@ const AdminBookings = () => {
         });
     }, []);
 
-    // Open modal and set action
+    // Open modal and set action for confirmations
     const openModal = (action, booking) => {
         setModalAction(action);
         setSelectedBooking(booking);
         setModalOpen(true);
     };
 
-    // Close modal
+    // Close modal for confirmations
     const closeModal = () => {
         setModalOpen(false);
         setModalAction(null);
         setSelectedBooking(null);
+    };
+
+    // Open image preview modal for receipt_url
+    const openImagePreview = (url) => {
+        setImageUrl(url);
+        setImagePreviewOpen(true);
+    };
+
+    // Close image preview modal
+    const closeImagePreview = () => {
+        setImagePreviewOpen(false);
+        setImageUrl('');
     };
 
     // Handle Confirm Action
@@ -120,9 +137,22 @@ const AdminBookings = () => {
         }
     };
 
+    // Handle Delete Action
+    const handleDelete = (bookingId) => {
+        const bookingRef = ref(realtimeDb, `bookings/${bookingId}`);
+        remove(bookingRef)
+            .then(() => {
+                alert('Booking deleted successfully!');
+            })
+            .catch((error) => {
+                console.error('Error deleting booking:', error);
+                alert('Failed to delete booking. Please try again.');
+            });
+    };
+
     // Filter and sort bookings based on debounced search query and date
     const filteredBookings = bookings
-        .filter((booking) => 
+        .filter((booking) =>
             booking.first_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
             booking.last_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
             booking.email_address.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
@@ -155,56 +185,61 @@ const AdminBookings = () => {
                 </Box>
             </Box>
 
-            {/* Custom Card Layout for Bookings */}
-            <Grid container spacing={3}>
-                {filteredBookings.map((booking) => (
-                    <Grid item xs={12} sm={6} md={4} key={booking.id}>
-                        <Card sx={styles.bookingCard}>
-                            <CardContent>
-                                <Typography variant="h6" sx={styles.bookingTitle}>
-                                    Booking ID: {booking.id}
-                                </Typography>
-                                <Typography variant="body1" sx={styles.bookingInfo}>
-                                    {booking.first_name} {booking.last_name}
-                                </Typography>
-                                <Typography variant="body2" sx={styles.bookingInfo}>
-                                    Email: {booking.email_address}
-                                </Typography>
-                                <Typography variant="body2" sx={styles.bookingInfo}>
-                                    Contact: {booking.contact_number}
-                                </Typography>
-                                <Typography variant="body2" sx={styles.bookingInfo}>
-                                    Package: {booking.package}
-                                </Typography>
-                                <Typography variant="body2" sx={styles.bookingInfo}>
-                                    Date: {formatDate(booking.date)}
-                                </Typography>
-                                <Typography variant="body2" sx={styles.bookingInfo}>
-                                    Time: {booking.time}
-                                </Typography>
-                                <Box display="flex" justifyContent="center" mt={2}>
-                                    <Button
-                                        variant="contained"
-                                        onClick={() => openModal('confirm', booking)}
-                                        sx={styles.confirmButton}
-                                        disabled={booking.status === 'confirmed'}
-                                    >
-                                        Confirm
-                                    </Button>
-                                    <Button
-                                        variant="contained"
-                                        onClick={() => openModal('cancel', booking)}
-                                        sx={styles.cancelButton}
-                                        disabled={booking.status === 'canceled'}
-                                    >
-                                        Cancel
-                                    </Button>
-                                </Box>
-                            </CardContent>
-                        </Card>
-                    </Grid>
-                ))}
-            </Grid>
+            {/* Table Layout for Bookings */} 
+            <TableContainer component={Paper}>
+                <Table>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell>Booking ID</TableCell>
+                            <TableCell>Name</TableCell>
+                            <TableCell>Email</TableCell>
+                            <TableCell>Contact</TableCell>
+                            <TableCell>Package</TableCell>
+                            <TableCell>Date</TableCell>
+                            <TableCell>Proof of Payment</TableCell>
+                            <TableCell>Payment Method</TableCell>
+                            <TableCell>Actions</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {filteredBookings.map((booking) => (
+                            <TableRow key={booking.id}>
+                                <TableCell>{booking.id}</TableCell>
+                                <TableCell>{booking.first_name} {booking.last_name}</TableCell>
+                                <TableCell>{booking.email_address}</TableCell>
+                                <TableCell>{booking.contact_number}</TableCell>
+                                <TableCell>{booking.package}</TableCell>
+                                <TableCell>{formatDate(booking.date)}</TableCell>
+                                <TableCell>
+                                    {booking.receipt_url ? (
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={() => openImagePreview(booking.receipt_url)}
+                                        >
+                                            Proof of Payment
+                                        </Button>
+                                    ) : (
+                                        'No Receipt'
+                                    )}
+                                </TableCell>
+                                <TableCell>{booking.payment_method || 'Not Specified'}</TableCell>
+                                <TableCell>
+                                    <IconButton onClick={() => openModal('confirm', booking)} disabled={booking.status === 'confirmed'}>
+                                        <EditIcon color="primary" />
+                                    </IconButton>
+                                    <IconButton onClick={() => openModal('cancel', booking)} disabled={booking.status === 'canceled'}>
+                                        <EditIcon color="error" />
+                                    </IconButton>
+                                    <IconButton onClick={() => handleDelete(booking.id)}>
+                                        <DeleteIcon color="error" />
+                                    </IconButton>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
 
             {/* Confirmation Modal */}
             <Dialog
@@ -222,67 +257,39 @@ const AdminBookings = () => {
                     </Typography>
                 </DialogContent>
                 <DialogActions>
-                    <Button 
-                        onClick={closeModal} 
-                        sx={styles.dialogButton}
-                    >
+                    <Button onClick={closeModal}>
                         Cancel
                     </Button>
-                    <Button 
-                        onClick={modalAction === 'confirm' ? handleConfirm : handleCancel} 
-                        sx={styles.dialogButton}
-                    >
+                    <Button onClick={modalAction === 'confirm' ? handleConfirm : handleCancel}>
                         Confirm
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Image Preview Modal */}
+            <Dialog
+                open={imagePreviewOpen}
+                onClose={closeImagePreview}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>Proof of Payment</DialogTitle>
+                <DialogContent>
+                    <Box
+                        component="img"
+                        src={imageUrl}
+                        alt="Proof of Payment"
+                        sx={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={closeImagePreview}>
+                        Close
                     </Button>
                 </DialogActions>
             </Dialog>
         </Paper>
     );
-};
-
-// Styling
-const styles = {
-    bookingCard: {
-        padding: '15px',
-        borderRadius: '12px',
-        boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
-        backgroundColor: '#ffffff', // Light background color for cards
-        transition: 'transform 0.2s, box-shadow 0.2s',
-        '&:hover': {
-            transform: 'translateY(-5px)',
-            boxShadow: '0 6px 18px rgba(0,0,0,0.15)',
-        },
-    },
-    bookingTitle: {
-        fontWeight: 'bold',
-        color: '#333',
-    },
-    bookingInfo: {
-        marginBottom: '8px',
-        color: '#555',
-    },
-    confirmButton: {
-        marginRight: '10px',
-        backgroundColor: '#4caf50',
-        color: '#fff',
-        '&:hover': {
-            backgroundColor: '#45a047',
-        },
-    },
-    cancelButton: {
-        backgroundColor: '#f44336',
-        color: '#fff',
-        '&:hover': {
-            backgroundColor: '#e53935',
-        },
-    },
-    dialogButton: {
-        backgroundColor: '#000',
-        color: '#fff',
-        '&:hover': {
-            backgroundColor: '#333',
-        },
-    },
 };
 
 export default AdminBookings;

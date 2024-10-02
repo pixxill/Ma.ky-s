@@ -25,11 +25,11 @@ const Sidebar = () => {
       <Box sx={styles.logoContainer}>
         <img src={logo} alt="Logo" style={styles.logo} />
         <Typography variant="h6" sx={styles.logoText}>
-          Admin Panel
+          MA.KY's
         </Typography>
       </Box>
-      <Divider sx={{ backgroundColor: '#bbb' }} /> {/* Divider with lighter color */}
-      <List sx={{ mt: 2, flexGrow: 1 }}> {/* flexGrow allows the list to expand and take space */}
+      <Divider sx={{ backgroundColor: '#e0e0e0' }} /> {/* Light divider color */}
+      <List sx={{ mt: 2, flexGrow: 1 }}>
         <ListItem button component={Link} to="/admindashboard" sx={styles.listItem}>
           <ListItemIcon sx={styles.icon}><FiHome /></ListItemIcon>
           <ListItemText primary="Dashboard" sx={styles.text} />
@@ -67,73 +67,65 @@ const Sidebar = () => {
 // Sidebar Styles
 const styles = {
   sidebar: {
-    width: '250px',
-    background: 'linear-gradient(135deg, #8e9eab 0%, #eef2f3 100%)', // Soft gradient background
-    color: '#333', // Darker text color for contrast
+    width: '220px',
+    background: '#fff', // Minimalist white background
+    color: '#333', // Darker text color
     height: '100vh',
-    padding: '20px',
+    padding: '15px',
     display: 'flex',
     flexDirection: 'column',
-    justifyContent: 'space-between', // Distribute space between elements
-    borderRight: '1px solid #ddd',
-    boxShadow: '2px 0 5px rgba(0,0,0,0.1)', // Subtle shadow for depth
-    transition: 'all 0.3s ease-in-out', // Smooth transition for hover effects
+    justifyContent: 'space-between',
+    borderRight: '1px solid #e0e0e0', // Light border
+    boxShadow: '1px 0 5px rgba(0,0,0,0.05)', // Subtle shadow
   },
   logoContainer: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: '10px', // Reduced margin for less space
+    marginBottom: '20px',
   },
   logo: {
-    width: '50px',
-    height: '50px',
+    width: '40px',
+    height: '40px',
     marginRight: '10px',
-    borderRadius: '50%', // Circular logo
-    boxShadow: '0 4px 8px rgba(0,0,0,0.2)', // Shadow for logo
+    borderRadius: '50%',
   },
   logoText: {
     color: '#333',
-    fontWeight: 'bold',
-    fontFamily: 'Roboto, sans-serif', // Updated font for better look
-    fontSize: '1.2rem',
+    fontWeight: '500', // Less bold for minimalist look
+    fontFamily: 'Roboto, sans-serif',
+    fontSize: '1.1rem',
   },
   listItem: {
-    marginBottom: '5px', // Adjusted spacing between items
-    borderRadius: '8px',
-    transition: 'all 0.3s ease',
+    marginBottom: '10px', // More space between items
+    borderRadius: '6px',
+    transition: 'background-color 0.3s ease',
     '&:hover': {
-      backgroundColor: '#f0f0f0', // Light hover effect
-      transform: 'scale(1.05)', // Slightly grow on hover
-    },
-    '& .MuiListItemIcon-root': {
-      transition: 'color 0.3s', // Icon color transition
+      backgroundColor: '#f9f9f9', // Subtle hover effect
     },
   },
   icon: {
-    color: '#555', // Medium icon color
-    minWidth: '40px',
-    '&:hover': {
-      color: '#333', // Darker icon color on hover
-    },
+    color: '#666', // Neutral icon color
+    minWidth: '36px',
   },
   text: {
-    color: '#333', // Dark text for better visibility
-    fontWeight: 'bold',
+    color: '#333', // Darker text for contrast
     fontFamily: 'Roboto, sans-serif',
+    fontSize: '0.9rem', // Slightly smaller font for minimalist design
   },
   logoutContainer: {
     display: 'flex',
     justifyContent: 'center',
-    padding: '10px',
+    padding: '10px 0',
   },
   logoutButton: {
-    bgcolor: 'black', // Soft gradient background color for the button
+    backgroundColor: '#333', // Darker button color for contrast
     color: '#fff',
-    width: '100%',
+    textTransform: 'none', // Remove uppercase text
     '&:hover': {
-      bgcolor: '#697079', // Slightly darker on hover
+      backgroundColor: '#555', // Slightly darker hover effect
     },
+    width: '100%',
   },
 };
 

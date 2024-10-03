@@ -54,7 +54,7 @@ const MenuSection = () => {
     height: '100%',
     backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url(${backgroundImage})`,
     backgroundSize: 'cover',
-    backgroundPosition: 'center',
+    backgroundPosition: 'cent er',
     backgroundRepeat: 'no-repeat',
     opacity: 10,
     zIndex: -1,
@@ -103,7 +103,7 @@ const MenuSection = () => {
 
   const imageContainerStyle = {
     width: '100%',
-    height: '250px',
+    height: '300px',
     overflow: 'hidden',
     display: 'flex',
     alignItems: 'center',
@@ -210,7 +210,6 @@ const MenuSection = () => {
               </div>
               <div style={titleStyle}>{item.title}</div>
               <div style={descriptionStyle}>{item.description}</div>
-              <div style={priceStyle}>₱{Number(item.price).toLocaleString()}</div>
             </div>
           ))}
         </Slider>
@@ -241,7 +240,7 @@ const MenuSection = () => {
         </Slider>
       </div>
     </div>
-  );
+  );  
 };
 
 export default MenuSection;

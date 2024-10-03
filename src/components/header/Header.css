@@ -95,6 +95,17 @@
   color: #555; /* Change text color on hover */
 }
 
+/* Active Link Style */
+.header__nav-link.active {
+  color: #040404; /* Highlight active link */
+  font-weight: bold; /* Make the active link bold */
+}
+
+.header__nav-link.active::before {
+  width: 100%; /* Keep underline for active link */
+  background-color: #0f0e0e; /* Match the underline color with active link */
+}
+
 /* Book Now Button Style */
 .header__nav-button {
   padding: 8px 20px;

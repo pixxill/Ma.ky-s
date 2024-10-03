@@ -33,7 +33,7 @@ const Home = () => {
   const [successOpen, setSuccessOpen] = useState(false);
   const [packageSelectionOpen, setPackageSelectionOpen] = useState(false);
   const [receiptPreview, setReceiptPreview] = useState(null);
-  const [prevState, setPrevState] = useState(''); 
+  const [prevState, setPrevState] = useState('');
   const [bookingData, setBookingData] = useState({
     first_name: '',
     last_name: '',
@@ -49,14 +49,86 @@ const Home = () => {
   const [availableTimeSlots, setAvailableTimeSlots] = useState(['8:00 AM - 11:00 AM', '1:00 PM - 5:00 PM']);
   const [idImage, setIdImage] = useState(null);
   const [idPreview, setIdPreview] = useState(null);
+  const [bookedDates, setBookedDates] = useState({});
+
+  const storage = getStorage();
+
+  // Fetch booked dates from the 'history' node in Firebase
+  const fetchBookedDates = async () => {
+    try {
+      const response = await fetch('https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/history.json');
+      const historyData = await response.json();
+
+      const dateCounts = {};
+
+      Object.values(historyData || {}).forEach(bookingId => {
+        const bookingDate = bookingId.date;
+
+        if (dateCounts[bookingDate]) {
+          dateCounts[bookingDate]++;
+        } else {
+          dateCounts[bookingDate] = 1;
+        }
+      });
+
+      setBookedDates(dateCounts);
+      console.log('Booked Dates from history:', dateCounts);
+    } catch (error) {
+      console.error('Error fetching booked dates from history:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchBookedDates();
+  }, []);  // Fetch bookings on component mount
+
+  // Function to disable fully booked dates
+  const isDateFullyBooked = (date) => {
+    const formattedDate = date.format('YYYY-MM-DD');
+    return bookedDates[formattedDate] >= 2;
+  };
+
+  // Function to disable past dates
+  const isPastDate = (date) => {
+    const today = new Date();
+    const selectedDate = new Date(date);
+    return selectedDate < today;
+  };
+
+  // Render the calendar day with a dot if the date has bookings
+  const renderDayWithLabel = (day, selectedDate, DayComponentProps) => {
+    const formattedDate = day.format('YYYY-MM-DD');
+    const hasBooking = bookedDates[formattedDate] && bookedDates[formattedDate] > 0;
+
+    console.log(`Rendering date: ${formattedDate}, Has Booking: ${hasBooking}`);
+
+    return (
+      <div style={{ position: 'relative', width: '100%', textAlign: 'center' }}>
+        <Typography component="div" variant="body2" {...DayComponentProps}>
+          {day.date()}
+        </Typography>
+        {hasBooking && (
+          <span style={{
+            position: 'absolute',
+            bottom: 4,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            backgroundColor: '#ff5722',
+            borderRadius: '50%',
+            width: '8px',
+            height: '8px',
+            display: 'inline-block',
+          }} />
+        )}
+      </div>
+    );
+  };
 
   const handleClickOpen = () => {
     clearFormData();
-    setPrevState('calendar'); 
-    setCalendarOpen(true); 
+    setPrevState('calendar');
+    setCalendarOpen(true);
   };
-
-  const storage = getStorage();
 
   const uploadReceiptImage = async (file) => {
     const receiptRef = storageRef(storage, `receipts/${file.name}`);
@@ -141,7 +213,7 @@ const Home = () => {
     const formattedDate = date.format('YYYY-MM-DD');
     setBookingData({ ...bookingData, date: formattedDate });
 
-    const response = await fetch(`https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings.json`);
+    const response = await fetch('https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings.json');
     const bookings = await response.json();
     const bookedSlots = Object.values(bookings || {}).filter(booking => booking.date === formattedDate).map(booking => booking.time);
 
@@ -224,7 +296,7 @@ const Home = () => {
   };
 
   const checkBookingAvailability = async (date, time) => {
-    const response = await fetch(`https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings.json`);
+    const response = await fetch('https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings.json');
     const bookings = await response.json();
     const filteredBookings = Object.values(bookings || {}).filter(
       (booking) => booking.date === date && booking.time === time
@@ -332,7 +404,12 @@ const Home = () => {
         </DialogTitle>
         <DialogContent>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-            <DateCalendar onChange={handleDateSelection} />
+            <DateCalendar
+              onChange={handleDateSelection}
+              shouldDisableDate={(date) => isDateFullyBooked(date) || isPastDate(date)}  // Disable fully booked dates and past dates
+              renderDay={(day, selectedDate, DayComponentProps) => renderDayWithLabel(day, selectedDate, DayComponentProps)}  // Render dots
+              key={bookedDates} // Trigger re-render when bookedDates changes
+            />
           </LocalizationProvider>
         </DialogContent>
         <DialogActions style={dialogActionsStyle}>

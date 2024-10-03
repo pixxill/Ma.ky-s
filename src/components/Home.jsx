@@ -16,12 +16,10 @@ import {
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
 import { DateCalendar } from '@mui/x-date-pickers/DateCalendar';
+import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "firebase/storage";
 
-// Importing Icons for Payment Methods
 import GcashIcon from '../assets/gcash.png';
 import TransferIcon from '../assets/transfer.png';
-
-// Image imports for the packages modal
 import packageImage1 from '../assets/package1.png';
 import packageImage2 from '../assets/package2.png';
 import packageImage3 from '../assets/package3.png';
@@ -32,11 +30,10 @@ const Home = () => {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
-  const [paymentOpen, setPaymentOpen] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
   const [packageSelectionOpen, setPackageSelectionOpen] = useState(false);
   const [receiptPreview, setReceiptPreview] = useState(null);
-  const [prevState, setPrevState] = useState(''); // Track the previous state
+  const [prevState, setPrevState] = useState(''); 
   const [bookingData, setBookingData] = useState({
     first_name: '',
     last_name: '',
@@ -49,18 +46,36 @@ const Home = () => {
     receipt: null,
   });
   const [errors, setErrors] = useState({});
-  const [availableTimeSlots, setAvailableTimeSlots] = useState(['8:00 AM - 11:00 AM', '1:00 PM - 5:00 PM']); // Default time slots
+  const [availableTimeSlots, setAvailableTimeSlots] = useState(['8:00 AM - 11:00 AM', '1:00 PM - 5:00 PM']);
+  const [idImage, setIdImage] = useState(null);
+  const [idPreview, setIdPreview] = useState(null);
 
   const handleClickOpen = () => {
-    setPrevState(''); // No previous state
-    setCalendarOpen(true); // Open calendar modal first
+    clearFormData();
+    setPrevState('calendar'); 
+    setCalendarOpen(true); 
+  };
+
+  const storage = getStorage();
+
+  const uploadReceiptImage = async (file) => {
+    const receiptRef = storageRef(storage, `receipts/${file.name}`);
+    await uploadBytes(receiptRef, file);
+    const downloadURL = await getDownloadURL(receiptRef);
+    return downloadURL;
+  };
+
+  const uploadIDImage = async (file) => {
+    const idImageRef = storageRef(storage, `id_images/${file.name}`);
+    await uploadBytes(idImageRef, file);
+    const downloadURL = await getDownloadURL(idImageRef);
+    return downloadURL;
   };
 
   const handleClose = () => {
     setCalendarOpen(false);
     setFormOpen(false);
     setConfirmationOpen(false);
-    setPaymentOpen(false);
     setSuccessOpen(false);
     setPackageSelectionOpen(false);
     setErrors({});
@@ -72,32 +87,32 @@ const Home = () => {
       case 'calendar':
         setCalendarOpen(true);
         setFormOpen(false);
+        setConfirmationOpen(false);
         break;
       case 'form':
         setFormOpen(true);
+        setCalendarOpen(false);
         setConfirmationOpen(false);
         break;
       case 'confirmation':
-        setConfirmationOpen(true);
-        setPaymentOpen(false);
-        break;
-      case 'payment':
-        setPaymentOpen(true);
-        setSuccessOpen(false);
+        setFormOpen(true);
+        setConfirmationOpen(false);
         break;
       default:
         handleClose();
+        break;
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
-
-    if (name === 'contact_number' && !/^\d*$/.test(value)) return;
-
-    if (name === 'receipt') {
+    if (name === 'id_image') {
       const file = files[0];
-      setBookingData({ ...bookingData, [name]: file });
+      setIdImage(file);
+      setIdPreview(URL.createObjectURL(file));
+    } else if (name === 'receipt') {
+      const file = files[0];
+      setBookingData({ ...bookingData, receipt: file });
       setReceiptPreview(URL.createObjectURL(file));
     } else {
       setBookingData({ ...bookingData, [name]: value });
@@ -116,28 +131,27 @@ const Home = () => {
       payment_method: '',
       receipt: null,
     });
-    setErrors({});
+    setIdImage(null);
+    setIdPreview(null);
     setReceiptPreview(null);
+    setErrors({});
   };
 
   const handleDateSelection = async (date) => {
     const formattedDate = date.format('YYYY-MM-DD');
     setBookingData({ ...bookingData, date: formattedDate });
 
-    // Check the availability of time slots for the selected date
     const response = await fetch(`https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings.json`);
     const bookings = await response.json();
-
-    // Find booked slots for the selected date
     const bookedSlots = Object.values(bookings || {}).filter(booking => booking.date === formattedDate).map(booking => booking.time);
 
-    // Filter time slots that are available (less than 2 bookings)
     setAvailableTimeSlots(['8:00 AM - 11:00 AM', '1:00 PM - 5:00 PM'].filter(slot => {
       return bookedSlots.filter(time => time === slot).length < 2;
     }));
 
     setCalendarOpen(false);
-    setFormOpen(true); // Open the form modal next
+    setFormOpen(true);
+    setPrevState('form');
   };
 
   const handlePackageSelectionOpen = () => {
@@ -166,6 +180,8 @@ const Home = () => {
     if (!bookingData.date) validationErrors.date = "Date is required.";
     if (!bookingData.time) validationErrors.time = "Time Slot is required.";
     if (!bookingData.package) validationErrors.package = "Package is required.";
+    if (!idImage) validationErrors.id_image = "ID image is required.";
+
     return validationErrors;
   };
 
@@ -174,7 +190,7 @@ const Home = () => {
     if (Object.keys(formErrors).length === 0) {
       const isAvailable = await checkBookingAvailability(bookingData.date, bookingData.time);
       if (isAvailable) {
-        setPrevState('form');
+        setPrevState('confirmation');
         setFormOpen(false);
         setConfirmationOpen(true);
       } else {
@@ -185,37 +201,35 @@ const Home = () => {
     }
   };
 
-  const handleConfirmNext = () => {
-    setPrevState('confirmation');
-    setConfirmationOpen(false);
-    setPaymentOpen(true);
-  };
-
-  const handlePaymentSubmit = () => {
-    if (!bookingData.payment_method) {
-      setErrors({ payment_method: 'Payment method is required' });
-      return;
+  const handleConfirmNext = async () => {
+    const formErrors = validateForm();
+    if (Object.keys(formErrors).length === 0) {
+      if (!bookingData.payment_method) {
+        setErrors({ payment_method: 'Payment method is required' });
+        return;
+      }
+      if (!bookingData.receipt) {
+        setErrors({ receipt: 'Receipt upload is required' });
+        return;
+      }
+      const isAvailable = await checkBookingAvailability(bookingData.date, bookingData.time);
+      if (isAvailable) {
+        handleBooking();
+      } else {
+        alert("The selected date and time slot is no longer available. Please choose a different time.");
+      }
+    } else {
+      setErrors(formErrors);
     }
-    if (!bookingData.receipt) {
-      setErrors({ receipt: 'Receipt upload is required' });
-      return;
-    }
-    setPrevState('payment');
-    setPaymentOpen(false);
-    setSuccessOpen(true); // Open success modal
-    handleBooking(); // Call booking submit logic
   };
 
   const checkBookingAvailability = async (date, time) => {
     const response = await fetch(`https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings.json`);
     const bookings = await response.json();
-
-    // Filter bookings to find existing bookings for the selected date and time slot
     const filteredBookings = Object.values(bookings || {}).filter(
       (booking) => booking.date === date && booking.time === time
     );
-
-    return filteredBookings.length < 2; // Return true if less than 2 bookings exist
+    return filteredBookings.length < 2;
   };
 
   const handleBooking = async () => {
@@ -226,19 +240,20 @@ const Home = () => {
         return;
       }
 
-      console.log('Booking data being sent:', bookingData);
+      let receiptURL = null;
+      let idImageURL = null;
 
-      const response = await fetch('https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings.json');
-
-      if (!response.ok) {
-        const errorDetails = await response.json();
-        alert('Error fetching bookings: ' + errorDetails.message);
-        throw new Error('Network response was not ok');
+      if (bookingData.receipt) {
+        receiptURL = await uploadReceiptImage(bookingData.receipt);
       }
 
+      if (idImage) {
+        idImageURL = await uploadIDImage(idImage);
+      }
+
+      const response = await fetch('https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings.json');
       const bookings = await response.json();
       const existingNumbers = bookings ? Object.keys(bookings).map((key) => parseInt(key.replace('ID_', ''))) : [];
-
       const uniqueId = generateUniqueId(existingNumbers);
 
       const currentDateTime = new Date().toLocaleString('en-US', {
@@ -252,11 +267,10 @@ const Home = () => {
 
       const newBooking = {
         ...bookingData,
+        receipt_url: receiptURL,
+        id_image_url: idImageURL,
         date_time: currentDateTime,
       };
-
-      console.log('Sending booking to:', `https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings/${uniqueId}.json`);
-      console.log('Booking payload:', newBooking);
 
       const postResponse = await fetch(`https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/bookings/${uniqueId}.json`, {
         method: 'PUT',
@@ -272,11 +286,8 @@ const Home = () => {
         throw new Error('Network response was not ok');
       }
 
-      console.log('Booking successful:', newBooking);
       setSuccessOpen(true);
-
       clearFormData();
-
     } catch (error) {
       console.error('Error submitting booking:', error);
     }
@@ -285,7 +296,7 @@ const Home = () => {
   const generateUniqueId = (existingNumbers) => {
     let newId;
     do {
-      newId = 'ID_' + Math.floor(Math.random() * 900 + 100); // Generate 3-digit unique ID
+      newId = 'ID_' + Math.floor(Math.random() * 900 + 100);
     } while (existingNumbers.includes(newId));
     return newId;
   };
@@ -325,7 +336,7 @@ const Home = () => {
           </LocalizationProvider>
         </DialogContent>
         <DialogActions style={dialogActionsStyle}>
-          <Button onClick={handleClose} style={dialogButtonStyle}>Cancel</Button>
+          <Button onClick={handleClose} style={dialogButtonStyleCancel}>Cancel</Button>
         </DialogActions>
       </Dialog>
 
@@ -435,15 +446,43 @@ const Home = () => {
           <Typography variant="body1" style={{ marginTop: '10px', color: errors.package ? 'red' : 'black' }}>
             {errors.package ? errors.package : `Selected Package: ${bookingData.package}`}
           </Typography>
+
+          <Button
+            variant="contained"
+            component="label"
+            style={{ marginTop: '20px' }}
+          >
+            Validate ID
+            <input
+              type="file"
+              accept="image/*"
+              name="id_image"
+              onChange={handleInputChange}
+              hidden
+            />
+          </Button>
+          {errors.id_image && (
+            <Typography color="error">{errors.id_image}</Typography>
+          )}
+          {idPreview && (
+            <div style={{ textAlign: 'center', marginTop: '20px' }}>
+              <Typography variant="h6">ID Image Preview:</Typography>
+              <img
+                src={idPreview}
+                alt="ID Preview"
+                style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }}
+              />
+            </div>
+          )}
         </DialogContent>
         <DialogActions style={dialogActionsStyle}>
-          <Button onClick={handleBack} style={dialogButtonStyle}>Back</Button>
-          <Button onClick={handleClose} style={dialogButtonStyle}>Cancel</Button>
-          <Button onClick={handleFormNext} style={dialogButtonStyle}>Next</Button>
+          <Button onClick={handleBack} style={dialogButtonStyleBack}>Back</Button>
+          <Button onClick={handleClose} style={dialogButtonStyleCancel}>Cancel</Button>
+          <Button onClick={handleFormNext} style={dialogButtonStyleNext}>Next</Button>
         </DialogActions>
       </Dialog>
 
-      {/* Booking Confirmation Modal */}
+      {/* Booking Confirmation Modal with Payment Details */}
       <Dialog open={confirmationOpen} onClose={() => setConfirmationOpen(false)} PaperProps={{ style: dialogStyle }}>
         <DialogTitle>
           <Typography style={titleStyle}>Confirm Your Booking</Typography>
@@ -459,20 +498,8 @@ const Home = () => {
           <Typography variant="body1"><strong>Date:</strong> {bookingData.date}</Typography>
           <Typography variant="body1"><strong>Time Slot:</strong> {bookingData.time}</Typography>
           <Typography variant="body1"><strong>Package:</strong> {bookingData.package}</Typography>
-        </DialogContent>
-        <DialogActions style={dialogActionsStyle}>
-          <Button onClick={handleBack} style={dialogButtonStyle}>Back</Button>
-          <Button onClick={handleClose} style={dialogButtonStyle}>Cancel</Button>
-          <Button onClick={handleConfirmNext} style={dialogButtonStyle}>Next</Button>
-        </DialogActions>
-      </Dialog>
 
-      {/* Payment Modal */}
-      <Dialog open={paymentOpen} onClose={() => setPaymentOpen(false)} PaperProps={{ style: dialogStyle }}>
-        <DialogTitle>
-          <Typography style={titleStyle}>Payment Details</Typography>
-        </DialogTitle>
-        <DialogContent>
+          {/* Payment Form */}
           <FormControl fullWidth margin="dense" error={!!errors.payment_method} style={textFieldStyle}>
             <InputLabel id="payment-method-label">Mode of Payment</InputLabel>
             <Select
@@ -508,11 +535,12 @@ const Home = () => {
             </Typography>
           )}
 
+          {/* Receipt Upload Button */}
           <Button
             variant="contained"
             component="label"
             style={{ margin: '20px 0', backgroundColor: '#333', color: '#fff' }}
-            disabled={!bookingData.payment_method} // Disable until payment method is selected
+            disabled={!bookingData.payment_method}
           >
             Upload Receipt
             <input
@@ -523,18 +551,30 @@ const Home = () => {
               hidden
             />
           </Button>
+
           {errors.receipt && <Typography color="error">{errors.receipt}</Typography>}
+
+          {/* Receipt Preview */}
           {receiptPreview && (
             <div style={{ textAlign: 'center', margin: '20px 0' }}>
               <Typography variant="h6">Receipt Preview:</Typography>
-              <img src={receiptPreview} alt="Receipt Preview" style={{ maxWidth: '100%', maxHeight: '200px', borderRadius: '10px', boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)' }} />
+              <img
+                src={receiptPreview}
+                alt="Receipt Preview"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '200px',
+                  borderRadius: '10px',
+                  boxShadow: '0 4px 8px rgba(0, 0, 0, 0.2)',
+                }}
+              />
             </div>
           )}
         </DialogContent>
         <DialogActions style={dialogActionsStyle}>
-          <Button onClick={handleBack} style={dialogButtonStyle}>Back</Button>
-          <Button onClick={handleClose} style={dialogButtonStyle}>Cancel</Button>
-          <Button onClick={handlePaymentSubmit} style={dialogButtonStyle}>Submit</Button>
+          <Button onClick={handleBack} style={dialogButtonStyleBack}>Back</Button>
+          <Button onClick={handleClose} style={dialogButtonStyleCancel}>Cancel</Button>
+          <Button onClick={handleConfirmNext} style={dialogButtonStyleSubmit}>Submit</Button>
         </DialogActions>
       </Dialog>
 
@@ -547,7 +587,7 @@ const Home = () => {
           <Typography>Your booking has been successfully completed!</Typography>
         </DialogContent>
         <DialogActions style={dialogActionsStyle}>
-          <Button onClick={handleClose} style={dialogButtonStyle}>Close</Button>
+          <Button onClick={handleClose} style={dialogButtonStyleNext}>Close</Button>
         </DialogActions>
       </Dialog>
 
@@ -564,8 +604,8 @@ const Home = () => {
           <img src={packageImage5} alt="Package E" style={packageImageStyle} onClick={() => handlePackageSelect("Package E")} />
         </DialogContent>
         <DialogActions style={dialogActionsStyle}>
-          <Button onClick={handleBack} style={dialogButtonStyle}>Back</Button>
-          <Button onClick={() => setPackageSelectionOpen(false)} style={dialogButtonStyle}>Close</Button>
+          <Button onClick={handleBack} style={dialogButtonStyleBack}>Back</Button>
+          <Button onClick={() => setPackageSelectionOpen(false)} style={dialogButtonStyleCancel}>Close</Button>
         </DialogActions>
       </Dialog>
     </div>
@@ -700,8 +740,9 @@ const dialogActionsStyle = {
   alignItems: 'center',
 };
 
-const dialogButtonStyle = {
-  background: 'linear-gradient(90deg, #5E5368, #000000)',
+// Button Styles
+const dialogButtonStyleBack = {
+  background: 'linear-gradient(90deg, #000000, #434343)', // Black gradient for Back button
   color: '#fff',
   padding: '12px 24px',
   borderRadius: '15px',
@@ -710,7 +751,45 @@ const dialogButtonStyle = {
   transition: 'background-color 0.3s ease, transform 0.3s ease',
   '&:hover': {
     transform: 'translateY(-3px)',
-    background: 'linear-gradient(90deg, #3f2b96, #6a5acd)',
+  },
+};
+
+const dialogButtonStyleCancel = {
+  background: 'linear-gradient(90deg, #FF0000, #DC143C)', // Red gradient for Cancel
+  color: '#fff',
+  padding: '12px 24px',
+  borderRadius: '15px',
+  fontWeight: 'bold',
+  boxShadow: '0 6px 12px rgba(0, 0, 0, 0.2)',
+  transition: 'background-color 0.3s ease, transform 0.3s ease',
+  '&:hover': {
+    transform: 'translateY(-3px)',
+  },
+};
+
+const dialogButtonStyleNext = {
+  background: 'linear-gradient(90deg, #0000FF, #1E90FF)', // Blue gradient for Next
+  color: '#fff',
+  padding: '12px 24px',
+  borderRadius: '15px',
+  fontWeight: 'bold',
+  boxShadow: '0 6px 12px rgba(0, 0, 0, 0.2)',
+  transition: 'background-color 0.3s ease, transform 0.3s ease',
+  '&:hover': {
+    transform: 'translateY(-3px)',
+  },
+};
+
+const dialogButtonStyleSubmit = {
+  background: 'linear-gradient(90deg, #32CD32, #228B22)', // Green gradient for Submit
+  color: '#fff',
+  padding: '12px 24px',
+  borderRadius: '15px',
+  fontWeight: 'bold',
+  boxShadow: '0 6px 12px rgba(0, 0, 0, 0.2)',
+  transition: 'background-color 0.3s ease, transform 0.3s ease',
+  '&:hover': {
+    transform: 'translateY(-3px)',
   },
 };
 

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { ref, onValue, set, remove } from 'firebase/database';
 import { realtimeDb } from '../Firebase';
-import { Button, Typography, Box, Paper, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton, Link } from '@mui/material';
+import { Button, Typography, Box, Paper, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import DeleteIcon from '@mui/icons-material/Delete';
-import EditIcon from '@mui/icons-material/Edit';
+import CheckIcon from '@mui/icons-material/Check';
+import CancelIcon from '@mui/icons-material/Cancel';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import emailjs from 'emailjs-com';  // Import EmailJS SDK
 
 // Utility function to format date for display purposes
 const formatDate = (dateString) => {
@@ -39,9 +41,10 @@ const AdminBookings = () => {
     const [modalAction, setModalAction] = useState(null);
     const [selectedBooking, setSelectedBooking] = useState(null);
 
-    // Image preview state for receipt_url
+    // Image preview state for receipt_url and id_image_url
     const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
     const [imageUrl, setImageUrl] = useState('');
+    const [previewTitle, setPreviewTitle] = useState('');
 
     useEffect(() => {
         const bookingsRef = ref(realtimeDb, 'bookings/');
@@ -71,9 +74,10 @@ const AdminBookings = () => {
         setSelectedBooking(null);
     };
 
-    // Open image preview modal for receipt_url
-    const openImagePreview = (url) => {
+    // Open image preview modal for both receipt_url and id_image_url
+    const openImagePreview = (url, title) => {
         setImageUrl(url);
+        setPreviewTitle(title);
         setImagePreviewOpen(true);
     };
 
@@ -81,9 +85,30 @@ const AdminBookings = () => {
     const closeImagePreview = () => {
         setImagePreviewOpen(false);
         setImageUrl('');
+        setPreviewTitle('');
     };
 
-    // Handle Confirm Action
+    // Email sending function
+    const sendConfirmationEmail = (booking) => {
+        const templateParams = {
+            to_name: booking.first_name,  // matches {{to_name}} in the template
+            to_email: booking.email_address,  // ensure this is passed correctly
+            booking_date: formatDate(booking.date),  // matches {{booking_date}}
+            package: booking.package,  // matches {{package}}
+            time: booking.time || "N/A",  // matches {{time}}, fallback to "N/A" if not provided
+            from_name: 'MA.KY\'s',  // Optional: You can hardcode this or pass dynamically
+        };
+
+        // Replace with your EmailJS service ID, template ID, and user ID
+        emailjs.send('service_mcb4fsh', 'template_jzjwu3h', templateParams, '2S7IA6JT_kWPjPxNQ')
+            .then((response) => {
+                console.log('Email sent successfully:', response.status, response.text);
+            }, (error) => {
+                console.error('Failed to send email:', error);
+            });
+    };
+
+    // Handle Confirm Action and send email
     const handleConfirm = () => {
         const bookingToUpdate = selectedBooking;
 
@@ -101,6 +126,10 @@ const AdminBookings = () => {
                 .then(() => {
                     alert('Booking confirmed and moved to history!');
                     closeModal();
+                    
+                    // Send email using EmailJS
+                    sendConfirmationEmail(bookingToUpdate);
+                    
                 })
                 .catch((error) => {
                     console.error('Error confirming booking:', error);
@@ -139,35 +168,49 @@ const AdminBookings = () => {
 
     // Handle Delete Action
     const handleDelete = (bookingId) => {
-        const bookingRef = ref(realtimeDb, `bookings/${bookingId}`);
-        remove(bookingRef)
-            .then(() => {
-                alert('Booking deleted successfully!');
+        const bookingToDelete = bookings.find((b) => b.id === bookingId);
+
+        if (bookingToDelete) {
+            const historyRef = ref(realtimeDb, `history/${bookingToDelete.id}`);
+            set(historyRef, {
+                ...bookingToDelete,
+                status: 'deleted',
+                movedAt: new Date().toISOString(),
             })
-            .catch((error) => {
-                console.error('Error deleting booking:', error);
-                alert('Failed to delete booking. Please try again.');
-            });
+                .then(() => {
+                    const bookingRef = ref(realtimeDb, `bookings/${bookingToDelete.id}`);
+                    return remove(bookingRef);
+                })
+                .then(() => {
+                    alert('Booking deleted and moved to history!');
+                })
+                .catch((error) => {
+                    console.error('Error deleting booking:', error);
+                    alert('Failed to delete booking. Please try again.');
+                });
+        }
     };
 
     // Filter and sort bookings based on debounced search query and date
     const filteredBookings = bookings
         .filter((booking) =>
-            booking.first_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-            booking.last_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-            booking.email_address.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-            booking.contact_number.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-            booking.package.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+            booking.first_name?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+            booking.last_name?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+            booking.email_address?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+            booking.contact_number?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+            booking.package?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
             formatDate(booking.date).toLowerCase().includes(debouncedSearchQuery.toLowerCase())
         )
         .sort((a, b) => {
-            return new Date(a.date) - new Date(b.date); // Sort by date in ascending order
+            const dateA = new Date(a.date).getTime();
+            const dateB = new Date(b.date).getTime();
+            return dateA - dateB;
         });
 
     return (
         <Paper elevation={3} sx={{ padding: 3, margin: '20px auto', width: '90%', backgroundColor: '#f5f5f5' }}>
             <Typography variant="h4" align="center" gutterBottom>
-                Admin Bookings
+                Recent Bookings
             </Typography>
 
             {/* Search Bar */}
@@ -185,7 +228,7 @@ const AdminBookings = () => {
                 </Box>
             </Box>
 
-            {/* Table Layout for Bookings */} 
+            {/* Table Layout for Bookings */}
             <TableContainer component={Paper}>
                 <Table>
                     <TableHead>
@@ -197,6 +240,7 @@ const AdminBookings = () => {
                             <TableCell>Package</TableCell>
                             <TableCell>Date</TableCell>
                             <TableCell>Proof of Payment</TableCell>
+                            <TableCell>ID Image</TableCell>
                             <TableCell>Payment Method</TableCell>
                             <TableCell>Actions</TableCell>
                         </TableRow>
@@ -215,7 +259,7 @@ const AdminBookings = () => {
                                         <Button
                                             variant="contained"
                                             color="primary"
-                                            onClick={() => openImagePreview(booking.receipt_url)}
+                                            onClick={() => openImagePreview(booking.receipt_url, 'Proof of Payment')}
                                         >
                                             Proof of Payment
                                         </Button>
@@ -223,16 +267,29 @@ const AdminBookings = () => {
                                         'No Receipt'
                                     )}
                                 </TableCell>
+                                <TableCell>
+                                    {booking.id_image_url ? (
+                                        <Button
+                                            variant="contained"
+                                            color="secondary"
+                                            onClick={() => openImagePreview(booking.id_image_url, 'ID Image')}
+                                        >
+                                            View ID
+                                        </Button>
+                                    ) : (
+                                        'No ID'
+                                    )}
+                                </TableCell>
                                 <TableCell>{booking.payment_method || 'Not Specified'}</TableCell>
                                 <TableCell>
                                     <IconButton onClick={() => openModal('confirm', booking)} disabled={booking.status === 'confirmed'}>
-                                        <EditIcon color="primary" />
+                                        <CheckIcon color="primary" />
                                     </IconButton>
                                     <IconButton onClick={() => openModal('cancel', booking)} disabled={booking.status === 'canceled'}>
-                                        <EditIcon color="error" />
+                                        <CancelIcon color="error" />
                                     </IconButton>
                                     <IconButton onClick={() => handleDelete(booking.id)}>
-                                        <DeleteIcon color="error" />
+                                        <DeleteForeverIcon color="error" />
                                     </IconButton>
                                 </TableCell>
                             </TableRow>
@@ -273,12 +330,12 @@ const AdminBookings = () => {
                 maxWidth="sm"
                 fullWidth
             >
-                <DialogTitle>Proof of Payment</DialogTitle>
+                <DialogTitle>{previewTitle}</DialogTitle>
                 <DialogContent>
                     <Box
                         component="img"
                         src={imageUrl}
-                        alt="Proof of Payment"
+                        alt={previewTitle}
                         sx={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }}
                     />
                 </DialogContent>

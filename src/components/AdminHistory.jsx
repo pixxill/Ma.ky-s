@@ -46,9 +46,10 @@ const AdminHistory = () => {
     const [modalAction, setModalAction] = useState(null); // "undo" or "delete"
     const [selectedBookingId, setSelectedBookingId] = useState(null);
 
-    // Image preview state for receipt_url
+    // Image preview state for receipt_url and id_image_url
     const [imagePreviewOpen, setImagePreviewOpen] = useState(false);
     const [imageUrl, setImageUrl] = useState('');
+    const [previewTitle, setPreviewTitle] = useState(''); // Title for the image preview modal
 
     useEffect(() => {
         // Fetch history data from the database
@@ -79,9 +80,10 @@ const AdminHistory = () => {
         setSelectedBookingId(null);
     };
 
-    // Open image preview modal for receipt_url
-    const openImagePreview = (url) => {
+    // Open image preview modal for receipt_url or id_image_url
+    const openImagePreview = (url, title) => {
         setImageUrl(url);
+        setPreviewTitle(title);
         setImagePreviewOpen(true);
     };
 
@@ -89,6 +91,7 @@ const AdminHistory = () => {
     const closeImagePreview = () => {
         setImagePreviewOpen(false);
         setImageUrl('');
+        setPreviewTitle('');
     };
 
     // Undo: Move booking back to the bookings node
@@ -218,6 +221,7 @@ const AdminHistory = () => {
                             <TableCell>Date</TableCell>
                             <TableCell>Status</TableCell>
                             <TableCell>Proof of Payment</TableCell>
+                            <TableCell>ID Image</TableCell> {/* New Column for ID Image */}
                             <TableCell>Actions</TableCell>
                         </TableRow>
                     </TableHead>
@@ -236,12 +240,25 @@ const AdminHistory = () => {
                                         <Button
                                             variant="contained"
                                             color="primary"
-                                            onClick={() => openImagePreview(booking.receipt_url)}
+                                            onClick={() => openImagePreview(booking.receipt_url, 'Proof of Payment')}
                                         >
                                             Proof of Payment
                                         </Button>
                                     ) : (
                                         'No Receipt'
+                                    )}
+                                </TableCell>
+                                <TableCell>
+                                    {booking.id_image_url ? (
+                                        <Button
+                                            variant="contained"
+                                            color="secondary"
+                                            onClick={() => openImagePreview(booking.id_image_url, 'ID Image')}
+                                        >
+                                            View ID
+                                        </Button>
+                                    ) : (
+                                        'No ID Image'
                                     )}
                                 </TableCell>
                                 <TableCell>
@@ -290,12 +307,12 @@ const AdminHistory = () => {
                 maxWidth="sm"
                 fullWidth
             >
-                <DialogTitle>Proof of Payment</DialogTitle>
+                <DialogTitle>{previewTitle}</DialogTitle> {/* Dynamic title */}
                 <DialogContent>
                     <Box
                         component="img"
                         src={imageUrl}
-                        alt="Proof of Payment"
+                        alt={previewTitle}
                         sx={{ width: '100%', maxHeight: '400px', objectFit: 'contain' }}
                     />
                 </DialogContent>

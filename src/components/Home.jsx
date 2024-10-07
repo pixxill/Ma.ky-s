@@ -14,7 +14,8 @@ import {
   Typography,
   Radio,
   RadioGroup,
-  FormControlLabel
+  FormControlLabel,
+  CircularProgress,
 } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
@@ -23,12 +24,17 @@ import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "fire
 
 import GcashIcon from '../assets/gcash.png';
 import TransferIcon from '../assets/transfer.png';
+import packageAImage from '../assets/packageA.png'; // Assuming these images exist
+import packageBImage from '../assets/packageB.png';
+import packageCImage from '../assets/packageC.png';
+import packageDImage from '../assets/packageD.png';
 
 const Home = () => {
   const [calendarOpen, setCalendarOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [successOpen, setSuccessOpen] = useState(false);
+  const [packagePreviewOpen, setPackagePreviewOpen] = useState(false); // State for package preview modal
   const [receiptPreview, setReceiptPreview] = useState(null);
   const [prevState, setPrevState] = useState('');
   const [bookingData, setBookingData] = useState({
@@ -47,23 +53,21 @@ const Home = () => {
   const [idImage, setIdImage] = useState(null);
   const [idPreview, setIdPreview] = useState(null);
   const [bookedDates, setBookedDates] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const storage = getStorage();
 
-  // Fetch booked dates from the 'history' node in Firebase
   const fetchBookedDates = async () => {
     try {
       const response = await fetch('https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/history.json');
       const historyData = await response.json();
-  
+
       const dateCounts = {};
-  
-      // Iterate through each booking
+
       Object.values(historyData || {}).forEach(booking => {
         const bookingDate = booking.date;
         const status = booking.status;
-  
-        // Count the booking if its status is 'confirmed' or 'completed'
+
         if (status === 'confirmed' || status === 'completed') {
           if (dateCounts[bookingDate]) {
             dateCounts[bookingDate]++;
@@ -72,24 +76,22 @@ const Home = () => {
           }
         }
       });
-  
+
       setBookedDates(dateCounts);
     } catch (error) {
       console.error('Error fetching booked dates from history:', error);
     }
-  };  
+  };
 
   useEffect(() => {
     fetchBookedDates();
-  }, []);  // Fetch bookings on component mount
+  }, []);
 
-  // Function to disable fully booked dates
   const isDateFullyBooked = (date) => {
     const formattedDate = date.format('YYYY-MM-DD');
-    return bookedDates[formattedDate] >= 2;  // Fully booked if there are 2 or more bookings on the same date
-  };  
+    return bookedDates[formattedDate] >= 2;
+  };
 
-  // Function to disable past dates
   const isPastDate = (date) => {
     const today = new Date();
     const selectedDate = new Date(date);
@@ -125,7 +127,7 @@ const Home = () => {
   const handleClickOpen = () => {
     clearFormData();
     setPrevState('calendar');
-    setCalendarOpen(true); // This opens the Calendar modal
+    setCalendarOpen(true);
   };
 
   const uploadReceiptImage = async (file) => {
@@ -147,6 +149,7 @@ const Home = () => {
     setFormOpen(false);
     setConfirmationOpen(false);
     setSuccessOpen(false);
+    setPackagePreviewOpen(false); // Close the package preview modal
     setErrors({});
     clearFormData();
   };
@@ -155,12 +158,12 @@ const Home = () => {
     switch (prevState) {
       case 'calendar':
         setCalendarOpen(true);
-        setFormOpen(false);  // Close the form modal
+        setFormOpen(false);
         setConfirmationOpen(false);
         break;
       case 'form':
         setFormOpen(false);
-        setCalendarOpen(true);  // Open the calendar modal again
+        setCalendarOpen(true);
         setConfirmationOpen(false);
         break;
       case 'confirmation':
@@ -171,7 +174,7 @@ const Home = () => {
         handleClose();
         break;
     }
-  };  
+  };
 
   const handleInputChange = (e) => {
     const { name, value, files } = e.target;
@@ -209,29 +212,26 @@ const Home = () => {
   const handleDateSelection = async (date) => {
     const formattedDate = date.format('YYYY-MM-DD');
     setBookingData({ ...bookingData, date: formattedDate });
-  
+
     try {
-      // Fetch the history node to get the bookings
       const response = await fetch('https://makys-e0be3-default-rtdb.asia-southeast1.firebasedatabase.app/history.json');
       const historyData = await response.json();
-  
-      // Extract booked time slots for the selected date
+
       const bookedSlots = Object.values(historyData || {}).filter(booking => booking.date === formattedDate).map(booking => booking.time);
-  
-      // Update the available time slots, disabling the ones that are fully booked
+
       setAvailableTimeSlots(['8:00 AM - 11:00 AM', '1:00 PM - 5:00 PM'].filter(slot => {
         return !bookedSlots.includes(slot);
       }));
-  
+
     } catch (error) {
       console.error('Error fetching booked times:', error);
     }
-  
+
     setCalendarOpen(false);
     setFormOpen(true);
     setPrevState('form');
-  };  
-  
+  };
+
   const validateForm = () => {
     let validationErrors = {};
     if (!bookingData.first_name.trim()) validationErrors.first_name = "First Name is required.";
@@ -281,11 +281,15 @@ const Home = () => {
         setErrors({ receipt: 'Receipt upload is required' });
         return;
       }
+      if (isSubmitting) return; // If form is being submitted, prevent another submission
+
+      setIsSubmitting(true); // Lock the form for submission
       const isAvailable = await checkBookingAvailability(bookingData.date, bookingData.time);
       if (isAvailable) {
         handleBooking();
       } else {
         alert("The selected date and time slot is no longer available. Please choose a different time.");
+        setIsSubmitting(false); // Unlock the form in case of error
       }
     } else {
       setErrors(formErrors);
@@ -306,6 +310,7 @@ const Home = () => {
       const isAvailable = await checkBookingAvailability(bookingData.date, bookingData.time);
       if (!isAvailable) {
         alert("The selected date and time slot is no longer available. Please choose a different time.");
+        setIsSubmitting(false); // Unlock the form in case of error
         return;
       }
 
@@ -357,8 +362,10 @@ const Home = () => {
 
       setSuccessOpen(true);
       clearFormData();
+      setIsSubmitting(false); // Unlock the form after successful submission
     } catch (error) {
       console.error('Error submitting booking:', error);
+      setIsSubmitting(false); // Unlock the form in case of error
     }
   };
 
@@ -376,8 +383,8 @@ const Home = () => {
       <div style={overlayStyle} />
 
       <div style={contentStyle}>
-        <h1 style={headingStyle}> MA.KY's!</h1>
-        <h2 style={subHeadingStyle}>Discover Amazing Coffee House & Get Energy</h2>
+        <h1 style={headingStyle}>Unlock the Venue of Your Dreams here at MA.KY's!</h1>
+        <h2 style={subHeadingStyle}>Don't settle for ordinary. Your extraordinary event deserves an extraordinary venue.</h2>
         <button
           style={buttonStyle}
           onMouseOver={(e) => {
@@ -401,12 +408,12 @@ const Home = () => {
         </DialogTitle>
         <DialogContent>
           <LocalizationProvider dateAdapter={AdapterDayjs}>
-          <DateCalendar
-  onChange={handleDateSelection}
-  shouldDisableDate={(date) => isDateFullyBooked(date) || isPastDate(date)}  // Disable fully booked dates and past dates
-  renderDay={(day, selectedDate, DayComponentProps) => renderDayWithLabel(day, selectedDate, DayComponentProps)}  // Render dots
-  key={bookedDates}  // Re-render when bookedDates changes
-/>
+            <DateCalendar
+              onChange={handleDateSelection}
+              shouldDisableDate={(date) => isDateFullyBooked(date) || isPastDate(date)}
+              renderDay={(day, selectedDate, DayComponentProps) => renderDayWithLabel(day, selectedDate, DayComponentProps)}
+              key={bookedDates}
+            />
           </LocalizationProvider>
         </DialogContent>
         <DialogActions style={dialogActionsStyle}>
@@ -492,27 +499,25 @@ const Home = () => {
             disabled
           />
           <FormControl fullWidth margin="dense" error={!!errors.time} style={textFieldStyle}>
-  <InputLabel id="time-slot-label">Time Slot</InputLabel>
-  <Select
-    labelId="time-slot-label"
-    label="Time Slot"
-    name="time"
-    value={bookingData.time}
-    onChange={handleInputChange}
-    variant="outlined"
-    style={{ backgroundColor: '#EDE8DC', color: '#000000' }}
-  >
-    {/* Render time slots, disable ones that are already booked */}
-    {['8:00 AM - 11:00 AM', '1:00 PM - 5:00 PM'].map(slot => (
-      <MenuItem value={slot} key={slot} disabled={!availableTimeSlots.includes(slot)}>
-        {slot}
-      </MenuItem>
-    ))}
-  </Select>
-  {errors.time && <Typography style={{ color: 'red', marginTop: '5px' }}>{errors.time}</Typography>}
-</FormControl>
+            <InputLabel id="time-slot-label">Time Slot</InputLabel>
+            <Select
+              labelId="time-slot-label"
+              label="Time Slot"
+              name="time"
+              value={bookingData.time}
+              onChange={handleInputChange}
+              variant="outlined"
+              style={{ backgroundColor: '#EDE8DC', color: '#000000' }}
+            >
+              {['8:00 AM - 11:00 AM', '1:00 PM - 5:00 PM'].map(slot => (
+                <MenuItem value={slot} key={slot} disabled={!availableTimeSlots.includes(slot)}>
+                  {slot}
+                </MenuItem>
+              ))}
+            </Select>
+            {errors.time && <Typography style={{ color: 'red', marginTop: '5px' }}>{errors.time}</Typography>}
+          </FormControl>
 
-          {/* Package Selection with Radio Buttons */}
           <FormControl component="fieldset" margin="dense" style={textFieldStyle}>
             <Typography variant="body1" style={{ marginBottom: '10px' }}>
               Select Package:
@@ -532,10 +537,20 @@ const Home = () => {
             {errors.package && <Typography color="error">{errors.package}</Typography>}
           </FormControl>
 
+          {/* Preview Packages Button */}
+          <Button
+            variant="contained"
+            color="primary"
+            style={{ marginTop: '-60px', }}
+            onClick={() => setPackagePreviewOpen(true)} // Open the package preview modal
+          >
+            Preview Packages
+          </Button>
+
           <Button
             variant="contained"
             component="label"
-            style={{ marginTop: '20px' }}
+            style={{ marginTop: '100px', marginLeft: '-140px' }}
           >
             Validate ID
             <input
@@ -567,7 +582,41 @@ const Home = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Booking Confirmation Modal with Payment Details */}
+{/* Package Preview Modal */}
+<Dialog open={packagePreviewOpen} onClose={handleClose} PaperProps={{ style: dialogStyle }}>
+  <DialogTitle>
+    <Typography style={titleStyle}>Package Previews</Typography>
+  </DialogTitle>
+  <DialogContent>
+    <div style={{ textAlign: 'center', marginBottom: '20px' }}>
+      <Typography variant="h6">Package A</Typography>
+      <img src={packageAImage} alt="Package A" style={{ maxWidth: '100%', marginBottom: '20px' }} />
+      <Typography variant="h6">Package B</Typography>
+      <img src={packageBImage} alt="Package B" style={{ maxWidth: '100%', marginBottom: '20px' }} />
+      <Typography variant="h6">Package C</Typography>
+      <img src={packageCImage} alt="Package C" style={{ maxWidth: '100%', marginBottom: '20px' }} />
+      <Typography variant="h6">Package D</Typography>
+      <img src={packageDImage} alt="Package D" style={{ maxWidth: '100%', marginBottom: '20px' }} />
+    </div>
+  </DialogContent>
+  <DialogActions style={dialogActionsStyle}>
+    {/* Back Button - Go back to Fill Out Form */}
+    <Button
+      onClick={() => {
+        setPackagePreviewOpen(false);  // Close Preview Modal
+        setFormOpen(true);             // Reopen the Form Modal
+      }}
+      style={dialogButtonStyleBack}
+    >
+      Back
+    </Button>
+
+    <Button onClick={handleClose} style={dialogButtonStyleNext}>Close</Button>
+  </DialogActions>
+</Dialog>
+
+
+      {/* Booking Confirmation Modal */}
       <Dialog open={confirmationOpen} onClose={() => setConfirmationOpen(false)} PaperProps={{ style: dialogStyle }}>
         <DialogTitle>
           <Typography style={titleStyle}>Confirm Your Booking</Typography>
@@ -584,7 +633,6 @@ const Home = () => {
           <Typography variant="body1"><strong>Time Slot:</strong> {bookingData.time}</Typography>
           <Typography variant="body1"><strong>Package:</strong> {bookingData.package}</Typography>
 
-          {/* Payment Form */}
           <FormControl fullWidth margin="dense" error={!!errors.payment_method} style={textFieldStyle}>
             <InputLabel id="payment-method-label">Mode of Payment</InputLabel>
             <Select
@@ -608,7 +656,6 @@ const Home = () => {
             {errors.payment_method && <Typography color="error">{errors.payment_method}</Typography>}
           </FormControl>
 
-          {/* Payment Method Info Note */}
           {bookingData.payment_method === 'Gcash' && (
             <Typography variant="body1" style={{ margin: '10px 0', color: '#333' }}>
               <strong>Gcash Number: </strong>1234-567-890
@@ -620,32 +667,29 @@ const Home = () => {
             </Typography>
           )}
 
-{/* Conditionally render the Receipt Upload Button if payment method is selected */}
-{bookingData.payment_method && (
-  <Button
-    variant="contained"
-    component="label"
-    style={{ 
-      margin: '20px 0', 
-      backgroundColor: '#333', 
-      color: '#fff'
-    }}
-  >
-    Upload Receipt
-    <input
-      type="file"
-      accept="image/*"
-      name="receipt"
-      onChange={handleInputChange}
-      hidden
-    />
-  </Button>
-)}
-
+          {bookingData.payment_method && (
+            <Button
+              variant="contained"
+              component="label"
+              style={{
+                margin: '20px 0',
+                backgroundColor: '#333',
+                color: '#fff'
+              }}
+            >
+              Upload Receipt
+              <input
+                type="file"
+                accept="image/*"
+                name="receipt"
+                onChange={handleInputChange}
+                hidden
+              />
+            </Button>
+          )}
 
           {errors.receipt && <Typography color="error">{errors.receipt}</Typography>}
 
-          {/* Receipt Preview */}
           {receiptPreview && (
             <div style={{ textAlign: 'center', margin: '20px 0' }}>
               <Typography variant="h6">Receipt Preview:</Typography>
@@ -665,7 +709,9 @@ const Home = () => {
         <DialogActions style={dialogActionsStyle}>
           <Button onClick={handleBack} style={dialogButtonStyleBack}>Back</Button>
           <Button onClick={handleClose} style={dialogButtonStyleCancel}>Cancel</Button>
-          <Button onClick={handleConfirmNext} style={dialogButtonStyleSubmit}>Submit</Button>
+          <Button onClick={handleConfirmNext} style={dialogButtonStyleSubmit} disabled={isSubmitting}>
+            {isSubmitting ? <CircularProgress size={24} /> : 'Submit'}
+          </Button>
         </DialogActions>
       </Dialog>
 
@@ -675,7 +721,9 @@ const Home = () => {
           <Typography style={titleStyle}>Booking Confirmed!</Typography>
         </DialogTitle>
         <DialogContent>
-          <Typography>Your booking has been successfully completed!</Typography>
+          <Typography>Your booking has been successfully completed! 
+          Please check your email for further details and confirmation of your booking.
+          </Typography>
         </DialogContent>
         <DialogActions style={dialogActionsStyle}>
           <Button onClick={handleClose} style={dialogButtonStyleNext}>Close</Button>
@@ -690,9 +738,10 @@ const homeStyle = {
   position: 'relative',
   minHeight: '100vh',
   display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'center',
-  paddingLeft: '50px',
+  justifyContent: 'Flex',
+  alignItems: 'center',
+  textAlign: 'justify',
+  padding: '0 50px',
   color: '#fff',
   fontFamily: "'Roboto', san-serif",
 };
@@ -722,23 +771,23 @@ const overlayStyle = {
 };
 
 const contentStyle = {
-  maxWidth: '550px',
+  maxWidth: '750px',
   textAlign: 'left',
   zIndex: 1,
 };
 
 const headingStyle = {
-  fontSize: '54px',
+  fontSize: '65px',
   marginBottom: '20px',
   fontWeight: 'bold',
   lineHeight: '1.1',
 };
 
 const subHeadingStyle = {
-  fontSize: '48px',
-  marginBottom: '25px',
+  fontSize: '40px',
+  marginBottom: '1px',
   lineHeight: '1.3',
-  fontWeight: 'bold',
+  fontWeight: 'Normal',
   letterSpacing: '0.5px',
 };
 
@@ -749,11 +798,11 @@ const buttonStyle = {
   border: '2px solid #F5EFFF',
   borderRadius: '100px',
   cursor: 'pointer',
-  fontSize: '16px',
+  fontSize: '30px',
   fontWeight: 'bold',
   fontFamily: "'Poppins', sans-serif",
   transition: 'all 0.3s ease',
-  marginTop: '100px',
+  marginTop: '50px',
   boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
 };
 
@@ -815,7 +864,7 @@ const dialogActionsStyle = {
 
 // Button Styles
 const dialogButtonStyleBack = {
-  background: 'linear-gradient(90deg, #000000, #434343)', // Black gradient for Back button
+  background: 'linear-gradient(90deg, #000000, #434343)',
   color: '#fff',
   padding: '12px 24px',
   borderRadius: '15px',
@@ -828,7 +877,7 @@ const dialogButtonStyleBack = {
 };
 
 const dialogButtonStyleCancel = {
-  background: 'linear-gradient(90deg, #FF0000, #DC143C)', // Red gradient for Cancel
+  background: 'linear-gradient(90deg, #FF0000, #DC143C)',
   color: '#fff',
   padding: '12px 24px',
   borderRadius: '15px',
@@ -841,7 +890,7 @@ const dialogButtonStyleCancel = {
 };
 
 const dialogButtonStyleNext = {
-  background: 'linear-gradient(90deg, #0000FF, #1E90FF)', // Blue gradient for Next
+  background: 'linear-gradient(90deg, #0000FF, #1E90FF)',
   color: '#fff',
   padding: '12px 24px',
   borderRadius: '15px',
@@ -854,7 +903,7 @@ const dialogButtonStyleNext = {
 };
 
 const dialogButtonStyleSubmit = {
-  background: 'linear-gradient(90deg, #32CD32, #228B22)', // Green gradient for Submit
+  background: 'linear-gradient(90deg, #32CD32, #228B22)',
   color: '#fff',
   padding: '12px 24px',
   borderRadius: '15px',

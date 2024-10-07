@@ -154,7 +154,8 @@ const AdminHistory = () => {
                 booking.email_address.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
                 booking.contact_number.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
                 booking.package.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-                formatDate(booking.date).toLowerCase().includes(debouncedSearchQuery.toLowerCase())
+                formatDate(booking.date).toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+                (booking.time && booking.time.toLowerCase().includes(debouncedSearchQuery.toLowerCase())) // Added filter for time field
             )
         )
         .sort((a, b) => {
@@ -219,9 +220,10 @@ const AdminHistory = () => {
                             <TableCell>Contact</TableCell>
                             <TableCell>Package</TableCell>
                             <TableCell>Date</TableCell>
+                            <TableCell>Time</TableCell> {/* New Time Column */}
                             <TableCell>Status</TableCell>
                             <TableCell>Proof of Payment</TableCell>
-                            <TableCell>ID Image</TableCell> {/* New Column for ID Image */}
+                            <TableCell>ID Image</TableCell>
                             <TableCell>Actions</TableCell>
                         </TableRow>
                     </TableHead>
@@ -234,6 +236,7 @@ const AdminHistory = () => {
                                 <TableCell>{booking.contact_number}</TableCell>
                                 <TableCell>{booking.package}</TableCell>
                                 <TableCell>{formatDate(booking.date)}</TableCell>
+                                <TableCell>{booking.time || 'No Time Specified'}</TableCell> {/* Display Time Field */}
                                 <TableCell>{booking.status}</TableCell>
                                 <TableCell>
                                     {booking.receipt_url ? (

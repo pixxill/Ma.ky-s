@@ -320,7 +320,7 @@ const styles = {
     justifyContent: 'center',
     alignItems: 'center',
     fontSize: '28px', // Increased icon size
-    color: '#fff',
+    color: 'white',
     marginBottom: '15px', // Added margin for spacing
   },
   cardText: {

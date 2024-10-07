@@ -50,10 +50,6 @@ const Sidebar = () => {
           <ListItemIcon sx={styles.icon}><FiLayers /></ListItemIcon>
           <ListItemText primary="Menu" sx={styles.text} />
         </ListItem>
-        <ListItem button component={Link} to="/admindashboard/adminpackage" sx={styles.listItem}>
-          <ListItemIcon sx={styles.icon}><FiPackage /></ListItemIcon>
-          <ListItemText primary="Packages" sx={styles.text} />
-        </ListItem>
       </List>
       <Box sx={styles.logoutContainer}>
         <Button variant="contained" sx={styles.logoutButton} onClick={handleLogout}>

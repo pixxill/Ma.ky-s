@@ -239,6 +239,7 @@ const AdminBookings = () => {
                             <TableCell>Contact</TableCell>
                             <TableCell>Package</TableCell>
                             <TableCell>Date</TableCell>
+                            <TableCell>Time</TableCell> {/* New header for Time */}
                             <TableCell>Proof of Payment</TableCell>
                             <TableCell>ID Image</TableCell>
                             <TableCell>Payment Method</TableCell>
@@ -254,6 +255,7 @@ const AdminBookings = () => {
                                 <TableCell>{booking.contact_number}</TableCell>
                                 <TableCell>{booking.package}</TableCell>
                                 <TableCell>{formatDate(booking.date)}</TableCell>
+                                <TableCell>{booking.time || 'Not Specified'}</TableCell> {/* Display time here */}
                                 <TableCell>
                                     {booking.receipt_url ? (
                                         <Button

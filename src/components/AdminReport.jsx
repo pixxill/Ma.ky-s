@@ -16,13 +16,13 @@ const AdminReport = () => {
   const [topSellingPackage, setTopSellingPackage] = useState('');
   const [bookingsTrendData, setBookingsTrendData] = useState([]);
 
-  // Fetch confirmed bookings from Firebase
+  // Fetch confirmed and completed bookings from Firebase
   useEffect(() => {
     const historyRef = ref(realtimeDb, 'history');
     const packageSales = { 'Package A': 0, 'Package B': 0, 'Package C': 0 };
     let totalRevenue = 0;
     const bookingsByMonth = {};
-    const confirmedBookings = [];
+    const confirmedOrCompletedBookings = [];
 
     onValue(historyRef, (snapshot) => {
       const data = snapshot.val();
@@ -31,7 +31,7 @@ const AdminReport = () => {
 
         Object.keys(data).forEach((id) => {
           const booking = data[id];
-          if (booking.status === 'confirmed') {
+          if (booking.status === 'confirmed' || booking.status === 'completed') {
             // Extract the month from the booking date
             const bookingDate = new Date(booking.date);
             const month = bookingDate.toLocaleString('default', { month: 'long' });
@@ -95,7 +95,7 @@ const AdminReport = () => {
         {/* Total Revenue and Top Selling Package */}
         <Box display="flex" justifyContent="space-between" alignItems="center" mt={2} mb={4}>
           <Typography variant="h6" sx={styles.revenue}>
-            Total Revenue: ${totalRevenue.toLocaleString()}
+            Total Revenue: ₱{totalRevenue.toLocaleString()}
           </Typography>
           <Typography variant="h6" sx={styles.topPackage}>
             Top-Selling Package: {topSellingPackage}
@@ -170,7 +170,7 @@ const AdminReport = () => {
 // Minimalist and Modern Style
 const styles = {
   container: {
-    backgroundColor: '#f9f9f9',
+    backgroundColor: '',
     height: '100vh',
   },
   paper: {
@@ -186,11 +186,11 @@ const styles = {
     marginBottom: '20px',
   },
   revenue: {
-    color: '#4A90E2',
+    color: 'black',
     fontWeight: '500',
   },
   topPackage: {
-    color: '#50E3C2',
+    color: 'black',
     fontWeight: '500',
   },
   divider: {
@@ -199,7 +199,7 @@ const styles = {
   chartBox: {
     width: '100%',
     height: 350,
-    backgroundColor: '#f9f9f9',
+    backgroundColor: 'white',
     padding: '20px',
     borderRadius: '10px',
   },

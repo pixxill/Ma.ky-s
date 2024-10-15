@@ -9,13 +9,14 @@
   top: 0; /* Align at the top */
   z-index: 1000; /* Make sure the header is on top */
   font-family: 'Roboto', sans-serif; /* Apply the Roboto font */
+  transition: background-color 0.3s ease; /* Smooth transition for background color */
 }
 
 /* Adjust the container to have more even spacing between the logo and navigation */
 .container {
   max-width: 100%; /* Full width of the container */
   margin: 0; /* Remove margin */
-  padding: 0 40px; /* Increased padding to move content away from the edges */
+  padding: 0 40px; /* Padding to move content away from the edges */
   display: flex; /* Flexbox layout */
   justify-content: space-between; /* Evenly distribute the logo and nav elements */
   align-items: center; /* Center items vertically */
@@ -35,30 +36,28 @@
 }
 
 .header__logo-img {
-  height: 100px; /* Adjust this value to change the logo height */
-  width: 100px; /* Make the logo width equal to height for a circular shape */
-  max-width: 100%; /* Ensure logo does not overflow its container */
+  height: 150px; /* Adjust the logo height */
+  width: 150px; /* Equal width and height for a circular shape */
+  max-width: 100%; /* Ensure logo does not overflow */
   transition: transform 0.3s ease; /* Smooth transition for hover effect */
   border-radius: 50%; /* Make the image circular */
-  object-fit: cover; /* Ensure the image covers the entire area and maintains its aspect ratio */
-  overflow: hidden; /* Hide overflow to maintain circular shape */
-  cursor: pointer; /* Change cursor to pointer on hover */
+  object-fit: cover; /* Maintain aspect ratio */
+  cursor: pointer; /* Pointer cursor on hover */
 }
 
 /* Navigation Styles */
 .header__nav {
   display: flex; /* Display nav items in a row */
-  align-items: center; /* Align items vertically in the nav */
+  align-items: center; /* Align items vertically */
   margin-left: auto; /* Push the navigation to the right */
 }
 
-/* Adjusting the Book Now button to align better with other navigation items */
 .header__nav-list {
   list-style: none; /* Remove default list styling */
   display: flex; /* Display list items in a row */
   margin: 0; /* Remove default margin */
   padding: 0; /* Remove default padding */
-  align-items: center; /* Ensure all nav items are aligned vertically with the button */
+  align-items: center; /* Ensure all nav items align vertically */
 }
 
 .header__nav-item {
@@ -68,7 +67,7 @@
 .header__nav-link {
   text-decoration: none; /* Remove underline */
   color: #F5F7F8; /* White text color */
-  font-size: 18px; /* Font size for nav links */
+  font-size: 30px; /* Font size for nav links */
   font-weight: 600; /* Bold text */
   font-family: 'Roboto', sans-serif; /* Apply the Roboto font to nav links */
   transition: color 0.3s ease, transform 0.3s ease; /* Smooth transition for color change and scale */
@@ -106,34 +105,35 @@
   background-color: #697565; /* Match the underline color with active link */
 }
 
-/* Book Now Button Style */
 .header__nav-button {
   padding: 8px 20px;
-  background-color: #3f2b96; /* Customize the color */
-  color: #fff;
-  border: none;
-  border-radius: 20px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-  transition: background-color 0.3s ease, transform 0.3s ease;
-  margin-left: 5px; /* Keep consistent with the nav item margin */
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 1), rgba(255, 255, 255, 1)); /* Gradient from white to transparent */
+  color: black; /* Darker text color for better contrast */
+  border: none; 
+  border-radius: 20px; 
+  cursor: pointer; 
+  font-size: 30px; 
+  font-weight: bold; 
+  transition: background 0.3s ease, transform 0.3s ease; 
+  margin-left: 5px; 
 }
 
 .header__nav-button:hover {
-  background-color: #6a5acd; /* Change on hover */
-  transform: scale(1.05);
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 1)); /* Lighter gradient on hover */
+  transform: scale(1.05); /* Slightly increase size */
 }
+
 
 /* Mobile and Small Screen Styles */
 @media (max-width: 768px) {
   .header {
     padding: 10px;
+    background-color: rgba(0, 0, 0, 0.8); /* Add a background for mobile */
   }
 
   .header__logo-img {
     height: 60px; /* Adjust logo size */
-    width: 100px;
+    width: 60px;
   }
 
   .header__nav-list {
@@ -144,5 +144,27 @@
     display: block; /* Show toggle button */
     cursor: pointer;
     color: #fff;
+  }
+
+  .header__nav-toggle.active + .header__nav-list {
+    display: flex; /* Show the nav list when the toggle is active */
+    flex-direction: column; /* Display items vertically */
+    background-color: rgba(0, 0, 0, 0.9); /* Dark background for the dropdown */
+    position: absolute; /* Position it over the content */
+    top: 100%; /* Below the header */
+    right: 0;
+    width: 100%; /* Full width on mobile */
+    padding: 20px 0;
+  }
+
+  .header__nav-item {
+    margin-left: 0;
+    margin-bottom: 15px; /* Add space between items */
+    text-align: center; /* Center the text */
+  }
+
+  .header__nav-button {
+    width: 80%; /* Button takes full width on small screens */
+    margin: 10px auto; /* Center it */
   }
 }

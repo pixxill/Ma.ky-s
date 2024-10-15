@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { Element } from 'react-scroll';
 import Header from './components/header/Header';
@@ -19,6 +19,25 @@ import AdminHistory from './components/AdminHistory'; // Import AdminHistory com
 import '@fontsource/roboto';
 
 const App = () => {
+  // Manage "Book Now" modals
+  const [calendarOpen, setCalendarOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [confirmationOpen, setConfirmationOpen] = useState(false);
+  const [successOpen, setSuccessOpen] = useState(false);
+
+  // Function to open the booking modal
+  const handleBookNowClick = () => {
+    setCalendarOpen(true); // Open the calendar modal
+  };
+
+  // Function to close all modals
+  const handleClose = () => {
+    setCalendarOpen(false);
+    setFormOpen(false);
+    setConfirmationOpen(false);
+    setSuccessOpen(false);
+  };
+
   return (
     <Router>
       <Routes>
@@ -27,9 +46,21 @@ const App = () => {
           path="/"
           element={
             <>
-              <Header />
+              {/* Header with Book Now button */}
+              <Header onBookNowClick={handleBookNowClick} /> {/* Header is shown here */}
+              {/* Section for Home page components */}
               <Element name="home">
-                <Home />
+                <Home
+                  calendarOpen={calendarOpen}
+                  setCalendarOpen={setCalendarOpen}
+                  formOpen={formOpen}
+                  setFormOpen={setFormOpen}
+                  confirmationOpen={confirmationOpen}
+                  setConfirmationOpen={setConfirmationOpen}
+                  successOpen={successOpen}
+                  setSuccessOpen={setSuccessOpen}
+                  handleClose={handleClose}
+                />
               </Element>
               <Element name="about">
                 <About />
@@ -43,18 +74,24 @@ const App = () => {
               <Element name="Location">
                 <Location />
               </Element>
-              <Element name="Footer">
-                <Footer />
-              </Element>
+              <Footer />
             </>
           }
         />
-        
+
         {/* Admin login route */}
         <Route path="/admin" element={<AdminLogin />} />
 
         {/* Admin Routes with Sidebar and DashboardLayout */}
-        <Route path="/admindashboard" element={<DashboardLayout />}>
+        <Route
+          path="/admindashboard/*"
+          element={
+            <>
+              {/* No Header for admin dashboard */}
+              <DashboardLayout />
+            </>
+          }
+        >
           <Route index element={<AdminDashboard />} /> {/* Default Admin Dashboard */}
           <Route path="adminmenu" element={<UploadMenuItem />} />
           <Route path="adminbookings" element={<AdminBookings />} />

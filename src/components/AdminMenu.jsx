@@ -36,7 +36,6 @@
     const [open, setOpen] = useState(false);
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
-    const [price, setPrice] = useState('');
     const [category, setCategory] = useState('Drinks'); // Default category
     const [newCategory, setNewCategory] = useState(''); // For adding a new category
     const [addNewCategory, setAddNewCategory] = useState(false); // Toggle between new or existing category
@@ -192,7 +191,7 @@
         return;
       }
     
-      if (!title || !description || !price || (!image && !editItemId)) {
+      if (!title || !description || (!image && !editItemId)) {
         setErrorMessage('Please fill in all fields and select an image.');
         return;
       }
@@ -231,7 +230,6 @@
         const menuItemData = {
           title,
           description,
-          price,
           imageUrl, // Set the image URL in the database
           isBestSeller,
         };
@@ -266,7 +264,6 @@
     const resetForm = () => {
       setTitle('');
       setDescription('');
-      setPrice('');
       setImage(null);
       setImagePreview(null); // Clear the image preview
       setCategory('Drinks');
@@ -315,7 +312,6 @@
       const item = menuItems[category][itemId];
       setTitle(item.title);
       setDescription(item.description);
-      setPrice(item.price);
       setCategory(category);
       setIsBestSeller(item.isBestSeller || false);
       setEditItemId(itemId);
@@ -462,18 +458,6 @@
                     rows={4}
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    fullWidth
-                    required
-                    sx={textFieldStyles}
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    label="Price"
-                    variant="outlined"
-                    type="number"
-                    value={price}
-                    onChange={(e) => setPrice(e.target.value)}
                     fullWidth
                     required
                     sx={textFieldStyles}
@@ -641,9 +625,8 @@
                     <CardContent>
                       <Typography variant="h6" gutterBottom>{item.title}</Typography>
                       <Typography variant="body2" color="textSecondary">{item.description}</Typography>
-                      <Typography variant="h6" sx={{ mt: 1 }}>
-                        ₱{formatNumberWithCommas(item.price)}
-                      </Typography>
+                    
+                    
                       <Box mt={2} display="flex" justifyContent="space-between">
                         <Tooltip title="Edit">
                           <IconButton 

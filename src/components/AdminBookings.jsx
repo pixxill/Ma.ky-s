@@ -109,62 +109,65 @@ const AdminBookings = () => {
     };
 
     // Handle Confirm Action and send email
-    const handleConfirm = () => {
-        const bookingToUpdate = selectedBooking;
+   // Additions are made here without removing any of your original code
 
-        if (bookingToUpdate) {
-            const historyRef = ref(realtimeDb, `history/${bookingToUpdate.id}`);
-            set(historyRef, {
-                ...bookingToUpdate,
-                status: 'confirmed',
-                movedAt: new Date().toISOString(),
+const handleConfirm = () => {
+    const bookingToUpdate = selectedBooking;
+    const actionTimestamp = new Date().toISOString(); // Add timestamp for confirmation
+
+    if (bookingToUpdate) {
+        const historyRef = ref(realtimeDb, `history/${bookingToUpdate.id}`);
+        set(historyRef, {
+            ...bookingToUpdate,
+            status: 'confirmed',
+            movedAt: actionTimestamp,  // Include actionTimestamp in movedAt field
+            actionTimestamp,  // Explicit field for action timestamp
+        })
+            .then(() => {
+                const bookingRef = ref(realtimeDb, `bookings/${bookingToUpdate.id}`);
+                return remove(bookingRef);
             })
-                .then(() => {
-                    const bookingRef = ref(realtimeDb, `bookings/${bookingToUpdate.id}`);
-                    return remove(bookingRef);
-                })
-                .then(() => {
-                    alert('Booking confirmed and moved to history!');
-                    closeModal();
-                    
-                    // Send email using EmailJS
-                    sendConfirmationEmail(bookingToUpdate);
-                    
-                })
-                .catch((error) => {
-                    console.error('Error confirming booking:', error);
-                    alert('Failed to confirm booking. Please try again.');
-                    closeModal();
-                });
-        }
-    };
-
-    // Handle Cancel Action
-    const handleCancel = () => {
-        const bookingToUpdate = selectedBooking;
-
-        if (bookingToUpdate) {
-            const historyRef = ref(realtimeDb, `history/${bookingToUpdate.id}`);
-            set(historyRef, {
-                ...bookingToUpdate,
-                status: 'canceled',
-                movedAt: new Date().toISOString(),
+            .then(() => {
+                alert('Booking confirmed and moved to history!');
+                closeModal();
+                // Send email using EmailJS
+                sendConfirmationEmail(bookingToUpdate);
             })
-                .then(() => {
-                    const bookingRef = ref(realtimeDb, `bookings/${bookingToUpdate.id}`);
-                    return remove(bookingRef);
-                })
-                .then(() => {
-                    alert('Booking canceled and moved to history!');
-                    closeModal();
-                })
-                .catch((error) => {
-                    console.error('Error canceling booking:', error);
-                    alert('Failed to cancel booking. Please try again.');
-                    closeModal();
-                });
-        }
-    };
+            .catch((error) => {
+                console.error('Error confirming booking:', error);
+                alert('Failed to confirm booking. Please try again.');
+                closeModal();
+            });
+    }
+};
+
+const handleCancel = () => {
+    const bookingToUpdate = selectedBooking;
+    const actionTimestamp = new Date().toISOString(); // Add timestamp for cancellation
+
+    if (bookingToUpdate) {
+        const historyRef = ref(realtimeDb, `history/${bookingToUpdate.id}`);
+        set(historyRef, {
+            ...bookingToUpdate,
+            status: 'canceled',
+            movedAt: actionTimestamp,  // Include actionTimestamp in movedAt field
+            actionTimestamp,  // Explicit field for action timestamp
+        })
+            .then(() => {
+                const bookingRef = ref(realtimeDb, `bookings/${bookingToUpdate.id}`);
+                return remove(bookingRef);
+            })
+            .then(() => {
+                alert('Booking canceled and moved to history!');
+                closeModal();
+            })
+            .catch((error) => {
+                console.error('Error canceling booking:', error);
+                alert('Failed to cancel booking. Please try again.');
+                closeModal();
+            });
+    }
+};
 
     // Handle Delete Action
     const handleDelete = (bookingId) => {
@@ -289,9 +292,6 @@ const AdminBookings = () => {
                                     </IconButton>
                                     <IconButton onClick={() => openModal('cancel', booking)} disabled={booking.status === 'canceled'}>
                                         <CancelIcon color="error" />
-                                    </IconButton>
-                                    <IconButton onClick={() => handleDelete(booking.id)}>
-                                        <DeleteForeverIcon color="error" />
                                     </IconButton>
                                 </TableCell>
                             </TableRow>

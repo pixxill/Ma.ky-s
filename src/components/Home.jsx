@@ -29,11 +29,17 @@ import packageBImage from '../assets/packageB.png';
 import packageCImage from '../assets/packageC.png';
 import packageDImage from '../assets/packageD.png';
 
-const Home = () => {
-  const [calendarOpen, setCalendarOpen] = useState(false);
-  const [formOpen, setFormOpen] = useState(false);
-  const [confirmationOpen, setConfirmationOpen] = useState(false);
-  const [successOpen, setSuccessOpen] = useState(false);
+const Home = ({
+  calendarOpen,
+  setCalendarOpen,
+  formOpen,
+  setFormOpen,
+  confirmationOpen,
+  setConfirmationOpen,
+  successOpen,
+  setSuccessOpen,
+  handleClose,
+}) => {
   const [packagePreviewOpen, setPackagePreviewOpen] = useState(false); // State for package preview modal
   const [receiptPreview, setReceiptPreview] = useState(null);
   const [prevState, setPrevState] = useState('');
@@ -124,12 +130,6 @@ const Home = () => {
     );
   };
 
-  const handleClickOpen = () => {
-    clearFormData();
-    setPrevState('calendar');
-    setCalendarOpen(true);
-  };
-
   const uploadReceiptImage = async (file) => {
     const receiptRef = storageRef(storage, `receipts/${file.name}`);
     await uploadBytes(receiptRef, file);
@@ -142,16 +142,6 @@ const Home = () => {
     await uploadBytes(idImageRef, file);
     const downloadURL = await getDownloadURL(idImageRef);
     return downloadURL;
-  };
-
-  const handleClose = () => {
-    setCalendarOpen(false);
-    setFormOpen(false);
-    setConfirmationOpen(false);
-    setSuccessOpen(false);
-    setPackagePreviewOpen(false); // Close the package preview modal
-    setErrors({});
-    clearFormData();
   };
 
   const handleBack = () => {
@@ -395,7 +385,7 @@ const Home = () => {
             e.currentTarget.style.backgroundColor = buttonStyle.backgroundColor;
             e.currentTarget.style.color = buttonStyle.color;
           }}
-          onClick={handleClickOpen}
+          onClick={() => setCalendarOpen(true)}
         >
           Book now!
         </button>
@@ -611,7 +601,6 @@ const Home = () => {
       Back
     </Button>
 
-    <Button onClick={handleClose} style={dialogButtonStyleNext}>Close</Button>
   </DialogActions>
 </Dialog>
 
@@ -813,7 +802,7 @@ const buttonHoverStyle = {
 
 const dialogStyle = {
   padding: '30px 40px',
-  borderRadius: '20px',
+  borderRadius: '10px',
   backgroundColor: '#EDE8DC',
   boxShadow: '0 12px 36px rgba(0, 0, 0, 0.2)',
   color: '#333',

@@ -5,15 +5,15 @@ import backgroundImage from '../assets/aboutbg.jpeg'; // Replace with your actua
 const CoffeeHouseSection = () => {
   const sectionStyle = {
     backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.6)), url(${backgroundImage})`,
-    backgroundSize: 'cover',
+      backgroundSize: 'cover',
     backgroundPosition: 'center',
     backgroundRepeat: 'no-repeat',
-    minHeight: '100vh', // Changed height to min-height for better content flexibility
+    minHeight: '100vh', // Ensure content flexibility
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
     color: '#fff',
-    fontFamily: "'Poppins', sans-serif", // Use a more elegant font family
+    fontFamily: "'Poppins', sans-serif",
     padding: '40px 20px',
     opacity: 0.9,
   };
@@ -22,13 +22,14 @@ const CoffeeHouseSection = () => {
     display: 'flex',
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.1)', // Slight transparent background for contrast
-    backdropFilter: 'blur(10px)', // Blurred background effect
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    backdropFilter: 'blur(10px)',
     borderRadius: '16px',
-    boxShadow: '0 15px 30px rgba(0, 0, 0, 0.5)', // More pronounced shadow for a lifted effect
+    boxShadow: '0 15px 30px rgba(0, 0, 0, 0.5)',
     maxWidth: '1100px',
     width: '100%',
     padding: '40px',
+    flexWrap: 'wrap', // Ensure responsiveness on smaller screens
   };
 
   const imageStyle = {
@@ -37,24 +38,26 @@ const CoffeeHouseSection = () => {
     borderRadius: '12px',
     marginRight: '40px',
     objectFit: 'cover',
-    boxShadow: '0 10px 20px rgba(0, 0, 0, 0.3)', // Shadow effect on the image
+    boxShadow: '0 10px 20px rgba(0, 0, 0, 0.3)',
+    flex: '1 1 40%', // Ensure proper scaling with text
   };
 
   const textStyle = {
     maxWidth: '600px',
     color: '#ddd',
+    flex: '1 1 60%', // Ensure proper scaling with image
   };
 
   const headingStyle = {
     fontSize: '28px',
     fontWeight: '700',
-    color: '#EDE8DC', // Gold color for headings to match a coffee theme
+    color: '#EDE8DC',
     textTransform: 'uppercase',
     marginBottom: '20px',
   };
 
   const subHeadingStyle = {
-    fontSize: '36px',
+    fontSize: '32px', // Made the heading size more consistent
     fontWeight: '800',
     color: '#fff',
     marginBottom: '20px',
@@ -82,7 +85,7 @@ const CoffeeHouseSection = () => {
   };
 
   const listIconStyle = {
-    color: '#EDE8DC', // Gold checkmark
+    color: '#EDE8DC', // Consistent gold color
     fontSize: '20px',
     marginRight: '10px',
   };
@@ -101,6 +104,12 @@ const CoffeeHouseSection = () => {
     letterSpacing: '1px',
   };
 
+  // Hover effect for the button
+  const buttonHoverStyle = {
+    ...buttonStyle,
+    backgroundColor: '#8f6947', // Darker shade on hover
+  };
+
   return (
     <div style={sectionStyle}>
       <div style={contentStyle}>
@@ -112,10 +121,10 @@ const CoffeeHouseSection = () => {
         <div style={textStyle}>
           <h2 style={headingStyle}>About Us</h2>
           <h3 style={subHeadingStyle}>
-          Discover Our Premium, Handcrafted Blends Perfectly Brewed Just for You!
+            Discover Our Premium, Handcrafted Blends Perfectly Brewed Just for You!
           </h3>
           <p style={paragraphStyle}>
-          Indulge in the finest selection of organic coffee, where every sip is a journey of rich flavors and aromas. Join us at MA.KY's, the ultimate destination for coffee lovers who crave the extraordinary. 
+            Indulge in the finest selection of organic coffee, where every sip is a journey of rich flavors and aromas. Join us at MA.KY's, the ultimate destination for coffee lovers who crave the extraordinary.
           </p>
           <ul style={listStyle}>
             <li style={listItemStyle}>

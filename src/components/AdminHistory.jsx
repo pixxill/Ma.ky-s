@@ -146,28 +146,29 @@ const AdminHistory = () => {
 
     // Filter and sort history based on debounced search query, filter status, and date
     const filteredHistory = history
-        .filter((booking) =>
-            (filterStatus === '' || booking.status === filterStatus) &&
-            (
-                booking.first_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-                booking.last_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-                booking.email_address.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-                booking.contact_number.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-                booking.package.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-                formatDate(booking.date).toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
-                (booking.time && booking.time.toLowerCase().includes(debouncedSearchQuery.toLowerCase())) // Added filter for time field
-            )
+    .filter((booking) =>
+        (filterStatus === '' || booking.status === filterStatus) &&
+        (
+            booking.first_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+            booking.last_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+            booking.email_address.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+            booking.contact_number.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+            booking.package.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+            formatDate(booking.date).toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+            (booking.time && booking.time.toLowerCase().includes(debouncedSearchQuery.toLowerCase()))
         )
-        .sort((a, b) => {
-            // Parse the dates for sorting
-            const dateA = parseDate(a.date);
-            const dateB = parseDate(b.date);
+    )
+    .sort((a, b) => {
+        // Use actionTimestamp for sorting if available, otherwise fall back to date
+        const dateA = parseDate(a.actionTimestamp || a.date);
+        const dateB = parseDate(b.actionTimestamp || b.date);
 
-            if (!dateA) return 1; // Move invalid dates to bottom
-            if (!dateB) return -1;
+        if (!dateA) return 1; // Move invalid dates to bottom
+        if (!dateB) return -1;
 
-            return dateA - dateB; // Sort by date in ascending order
-        });
+        return dateB - dateA; // Sort by date in descending order (most recent first)
+    });
+
 
     return (
         <Paper elevation={3} sx={{ padding: 3, margin: '20px auto', width: '90%', backgroundColor: '#f5f5f5' }}>
@@ -222,6 +223,7 @@ const AdminHistory = () => {
                             <TableCell>Date</TableCell>
                             <TableCell>Time</TableCell> {/* New Time Column */}
                             <TableCell>Status</TableCell>
+                            <TableCell>Action Timestamp</TableCell>
                             <TableCell>Proof of Payment</TableCell>
                             <TableCell>ID Image</TableCell>
                             <TableCell>Actions</TableCell>
@@ -238,6 +240,7 @@ const AdminHistory = () => {
                                 <TableCell>{formatDate(booking.date)}</TableCell>
                                 <TableCell>{booking.time || 'No Time Specified'}</TableCell> {/* Display Time Field */}
                                 <TableCell>{booking.status}</TableCell>
+                                <TableCell>{formatDate(booking.actionTimestamp)}</TableCell>
                                 <TableCell>
                                     {booking.receipt_url ? (
                                         <Button

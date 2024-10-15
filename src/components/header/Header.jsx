@@ -76,20 +76,12 @@ const Header = ({ onBookNowClick }) => {
             </li>
             {/* Book Now Button */}
             <li className="header__nav-item">
-            <button
-    className="header__nav-button"
-    onClick={onBookNowClick}
-    style={{
-      backgroundColor: 'white',
-      color: 'black',
-      border: 'none',
-      padding: '10px 20px',
-      borderRadius: '5px',
-      cursor: 'pointer'
-    }}
-  >
-    Book Now
-  </button>
+              <button
+                className="header__nav-button"
+                onClick={onBookNowClick} 
+              >
+                Book Now
+              </button>
             </li>
           </ul>
         </nav>

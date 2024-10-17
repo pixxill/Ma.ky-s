@@ -1,16 +1,29 @@
 import React, { useState, useEffect } from 'react';
 import { ref, onValue, set, remove } from 'firebase/database';
 import { realtimeDb } from '../Firebase';
-import { Button, Typography, Box, Paper, TextField, Dialog, DialogTitle, DialogContent, DialogActions, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, IconButton } from '@mui/material';
+import {
+    Button,
+    Typography,
+    Box,
+    Paper,
+    TextField,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow
+} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import CheckIcon from '@mui/icons-material/Check';
-import CancelIcon from '@mui/icons-material/Cancel';
-import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
 import emailjs from 'emailjs-com';  // Import EmailJS SDK
 
 // Utility function to format date for display purposes
 const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
     return new Date(dateString).toLocaleDateString(undefined, options);
 };
 
@@ -91,15 +104,14 @@ const AdminBookings = () => {
     // Email sending function
     const sendConfirmationEmail = (booking) => {
         const templateParams = {
-            to_name: booking.first_name,  // matches {{to_name}} in the template
-            to_email: booking.email_address,  // ensure this is passed correctly
-            booking_date: formatDate(booking.date),  // matches {{booking_date}}
-            package: booking.package,  // matches {{package}}
-            time: booking.time || "N/A",  // matches {{time}}, fallback to "N/A" if not provided
-            from_name: 'MA.KY\'s',  // Optional: You can hardcode this or pass dynamically
+            to_name: booking.first_name,
+            to_email: booking.email_address,
+            booking_date: formatDate(booking.date),
+            package: booking.package,
+            time: booking.time || "N/A",
+            from_name: 'MA.KY\'s',
         };
 
-        // Replace with your EmailJS service ID, template ID, and user ID
         emailjs.send('service_mcb4fsh', 'template_jzjwu3h', templateParams, '2S7IA6JT_kWPjPxNQ')
             .then((response) => {
                 console.log('Email sent successfully:', response.status, response.text);
@@ -108,68 +120,63 @@ const AdminBookings = () => {
             });
     };
 
-    // Handle Confirm Action and send email
-   // Additions are made here without removing any of your original code
+    const handleConfirm = () => {
+        const bookingToUpdate = selectedBooking;
+        const actionTimestamp = new Date().toISOString();
 
-const handleConfirm = () => {
-    const bookingToUpdate = selectedBooking;
-    const actionTimestamp = new Date().toISOString(); // Add timestamp for confirmation
-
-    if (bookingToUpdate) {
-        const historyRef = ref(realtimeDb, `history/${bookingToUpdate.id}`);
-        set(historyRef, {
-            ...bookingToUpdate,
-            status: 'confirmed',
-            movedAt: actionTimestamp,  // Include actionTimestamp in movedAt field
-            actionTimestamp,  // Explicit field for action timestamp
-        })
-            .then(() => {
-                const bookingRef = ref(realtimeDb, `bookings/${bookingToUpdate.id}`);
-                return remove(bookingRef);
+        if (bookingToUpdate) {
+            const historyRef = ref(realtimeDb, `history/${bookingToUpdate.id}`);
+            set(historyRef, {
+                ...bookingToUpdate,
+                status: 'confirmed',
+                movedAt: actionTimestamp,
+                actionTimestamp,
             })
-            .then(() => {
-                alert('Booking confirmed and moved to history!');
-                closeModal();
-                // Send email using EmailJS
-                sendConfirmationEmail(bookingToUpdate);
-            })
-            .catch((error) => {
-                console.error('Error confirming booking:', error);
-                alert('Failed to confirm booking. Please try again.');
-                closeModal();
-            });
-    }
-};
+                .then(() => {
+                    const bookingRef = ref(realtimeDb, `bookings/${bookingToUpdate.id}`);
+                    return remove(bookingRef);
+                })
+                .then(() => {
+                    alert('Booking confirmed and moved to history!');
+                    closeModal();
+                    sendConfirmationEmail(bookingToUpdate);
+                })
+                .catch((error) => {
+                    console.error('Error confirming booking:', error);
+                    alert('Failed to confirm booking. Please try again.');
+                    closeModal();
+                });
+        }
+    };
 
-const handleCancel = () => {
-    const bookingToUpdate = selectedBooking;
-    const actionTimestamp = new Date().toISOString(); // Add timestamp for cancellation
+    const handleCancel = () => {
+        const bookingToUpdate = selectedBooking;
+        const actionTimestamp = new Date().toISOString();
 
-    if (bookingToUpdate) {
-        const historyRef = ref(realtimeDb, `history/${bookingToUpdate.id}`);
-        set(historyRef, {
-            ...bookingToUpdate,
-            status: 'canceled',
-            movedAt: actionTimestamp,  // Include actionTimestamp in movedAt field
-            actionTimestamp,  // Explicit field for action timestamp
-        })
-            .then(() => {
-                const bookingRef = ref(realtimeDb, `bookings/${bookingToUpdate.id}`);
-                return remove(bookingRef);
+        if (bookingToUpdate) {
+            const historyRef = ref(realtimeDb, `history/${bookingToUpdate.id}`);
+            set(historyRef, {
+                ...bookingToUpdate,
+                status: 'canceled',
+                movedAt: actionTimestamp,
+                actionTimestamp,
             })
-            .then(() => {
-                alert('Booking canceled and moved to history!');
-                closeModal();
-            })
-            .catch((error) => {
-                console.error('Error canceling booking:', error);
-                alert('Failed to cancel booking. Please try again.');
-                closeModal();
-            });
-    }
-};
+                .then(() => {
+                    const bookingRef = ref(realtimeDb, `bookings/${bookingToUpdate.id}`);
+                    return remove(bookingRef);
+                })
+                .then(() => {
+                    alert('Booking canceled and moved to history!');
+                    closeModal();
+                })
+                .catch((error) => {
+                    console.error('Error canceling booking:', error);
+                    alert('Failed to cancel booking. Please try again.');
+                    closeModal();
+                });
+        }
+    };
 
-    // Handle Delete Action
     const handleDelete = (bookingId) => {
         const bookingToDelete = bookings.find((b) => b.id === bookingId);
 
@@ -194,7 +201,6 @@ const handleCancel = () => {
         }
     };
 
-    // Filter and sort bookings based on debounced search query and date
     const filteredBookings = bookings
         .filter((booking) =>
             booking.first_name?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
@@ -242,7 +248,7 @@ const handleCancel = () => {
                             <TableCell>Contact</TableCell>
                             <TableCell>Package</TableCell>
                             <TableCell>Date</TableCell>
-                            <TableCell>Time</TableCell> {/* New header for Time */}
+                            <TableCell>Time</TableCell>
                             <TableCell>Proof of Payment</TableCell>
                             <TableCell>ID Image</TableCell>
                             <TableCell>Payment Method</TableCell>
@@ -258,7 +264,7 @@ const handleCancel = () => {
                                 <TableCell>{booking.contact_number}</TableCell>
                                 <TableCell>{booking.package}</TableCell>
                                 <TableCell>{formatDate(booking.date)}</TableCell>
-                                <TableCell>{booking.time || 'Not Specified'}</TableCell> {/* Display time here */}
+                                <TableCell>{booking.time || 'Not Specified'}</TableCell>
                                 <TableCell>
                                     {booking.receipt_url ? (
                                         <Button
@@ -287,12 +293,24 @@ const handleCancel = () => {
                                 </TableCell>
                                 <TableCell>{booking.payment_method || 'Not Specified'}</TableCell>
                                 <TableCell>
-                                    <IconButton onClick={() => openModal('confirm', booking)} disabled={booking.status === 'confirmed'}>
-                                        <CheckIcon color="primary" />
-                                    </IconButton>
-                                    <IconButton onClick={() => openModal('cancel', booking)} disabled={booking.status === 'canceled'}>
-                                        <CancelIcon color="error" />
-                                    </IconButton>
+                                    <Box display="flex" justifyContent="space-between" gap={1}>
+                                        <Button
+                                            variant="contained"
+                                            color="primary"
+                                            onClick={() => openModal('confirm', booking)}
+                                            disabled={booking.status === 'confirmed'}
+                                        >
+                                            Confirm
+                                        </Button>
+                                        <Button
+                                            variant="contained"
+                                            color="error"
+                                            onClick={() => openModal('cancel', booking)}
+                                            disabled={booking.status === 'canceled'}
+                                        >
+                                            Cancel
+                                        </Button>
+                                    </Box>
                                 </TableCell>
                             </TableRow>
                         ))}

@@ -35,7 +35,7 @@ const AdminLogin = () => {
     <div style={styles.container}>
       <div style={styles.leftPane}>
         <h2 style={styles.welcomeHeader}>WELCOME BACK ADMIN!</h2>
-        <p style={styles.welcomeText}>Manage your content and settings</p>
+        <p style={styles.welcomeText}>Let's make today productive!</p>
       </div>
       <animated.div style={{ ...styles.rightPane, ...formAnimation }}>
         <img src={logo} alt="Logo" style={styles.logo} /> {/* Logo Image */}

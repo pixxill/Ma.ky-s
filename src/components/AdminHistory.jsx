@@ -8,10 +8,9 @@ import UndoIcon from '@mui/icons-material/Undo';
 
 // Utility function to format date for display purposes
 const formatDate = (dateString) => {
-    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const options = { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' };
     return new Date(dateString).toLocaleDateString(undefined, options);
 };
-
 // Utility function to parse and validate date
 const parseDate = (dateString) => {
     const date = new Date(dateString);
@@ -238,7 +237,7 @@ const AdminHistory = () => {
                                 <TableCell>{booking.contact_number}</TableCell>
                                 <TableCell>{booking.package}</TableCell>
                                 <TableCell>{formatDate(booking.date)}</TableCell>
-                                <TableCell>{booking.time || 'No Time Specified'}</TableCell> {/* Display Time Field */}
+                                <TableCell>{formatDate(booking.actionTimestamp)}</TableCell> {/* Display Time Field */}
                                 <TableCell>{booking.status}</TableCell>
                                 <TableCell>{formatDate(booking.actionTimestamp)}</TableCell>
                                 <TableCell>
@@ -268,14 +267,30 @@ const AdminHistory = () => {
                                     )}
                                 </TableCell>
                                 <TableCell>
-                                    <IconButton onClick={() => openModal('undo', booking.id)}>
-                                        <UndoIcon color="primary" />
-                                    </IconButton>
-                                    <IconButton onClick={() => openModal('delete', booking.id)}>
-                                        <DeleteIcon color="error" />
-                                    </IconButton>
-                                </TableCell>
-                            </TableRow>
+    <Box display="flex" flexDirection="column" alignItems="flex-start">
+        <Button
+            variant="contained"
+            color="primary"
+            onClick={() => openModal('undo', booking.id)}
+            sx={{ width: '100px', marginBottom: '8px' }} // Adds spacing below the Undo button
+        >
+            Undo
+        </Button>
+        <Button
+            variant="contained"
+            color="error"
+            onClick={() => openModal('delete', booking.id)}
+            sx={{ width: '100px' }} // No need for margin here
+        >
+            Delete
+        </Button>
+    </Box>
+</TableCell>
+
+
+
+
+                            </TableRow> 
                         ))}
                     </TableBody>
                 </Table>
